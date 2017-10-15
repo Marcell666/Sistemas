@@ -49,6 +49,10 @@ int FILA_topId(ptFila ptFila){
 	if(FILA_vazia(ptFila)) return;
 	return ptFila->prim->id;
 }
+void FILA_topResetTempo(ptFila){
+	if(FILA_vazia(ptFila)) return;
+	ptFila->prim->tempo = ptFila->tempo;
+}
 int FILA_topTempo(ptFila ptFila){
 	if(FILA_vazia(ptFila)) return;
 	return ptFila->prim->tempo;

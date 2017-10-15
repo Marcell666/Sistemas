@@ -53,7 +53,7 @@ int main(void){
 			E não queremos que este processo termine antes do outro.
 			Caso este processo termine, o outro deve ser avisado e terminar tambem.
 		*/
-		kill(getpid(), SIGSTOP);
+		raise(SIGSTOP);
 	}while(strcmp(comando, "exit") != 0);	
 
 	/* Encerrando... */

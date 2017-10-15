@@ -5,26 +5,48 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include "fila.h"
+
 //só pode ter 10 argumentos
 #define MAX_ARGS 10
 #define MAX_STRING 80
 #define TRUE 1
 #define CHAVE 8180
 
+void criaNovoProcesso(int sinal);
+void processoTermina(int sinal);
+
 static char *comando;
-Fila f1,f2,f3, fAtual;
+ptFila f1,f2,f3, fAtual;
+int tempo;
+
+/*
+
+	Acho que estou tendo um problema quanto a precisão de tempo.
+	Existem tres situações envolvendo o tempo do escalonador e momento em que o processo pede IO
+	Se o processo pede IO depois que o tempo do escalonador acaba, o que vai acontecer primeiro é que o escalonador vai parar o processo, e aumentar o nivel dele, (diminuir a prioridade).
+	Se o processo pede IO antes que o tempo do escalonador acabe, o que vai acontecer primeiro é o processo enviar um sinal para o escalonador, que vai ver que ele pediu IO, vai coloca-lo num nivel superior e vai passar para o proximo processo.
+	Mas quando é entao que o processo NÃO sera mudado de fila? Quando ele para junto com o escalonador.
+	Precisamos considerar o tempo como uma faixa e não como um instante. Assim o escalonador vai esperar o processo se atrasar para pará-lo, e programa quando o programa se adiantar, o escalonador vai checar o proprio tempo antes de mudar de fila.
+
+	Usando dupla precisão posso estabelecer faixas de tempo, vamos usar a fila que tem 4 unidades como exemplo.
+	O escalonador possui uma margem de erro, se o processo pede IO, depois de ter executado de 3.5 ate 4.5 ut, entao o escalonador "aproxima" isso para 4 ut. Se o processo pede IO antes de ter executado 3.5 ut então o processo é trocado de fila. Se o escalonador ate 4.5 ut executados, não recebe sinal do processo, então quer dizer que ele esta atrasado e esera trocado de fila.
+
+	No caso a fila de 4 ut, é a de maior nivel, então um processo que extrapolasse e ja estivesse dentro dela, não seria trocado, mas vale o exemplo.
+
+*/
+
 
 int main(int argc, char **argv){
-	Fila filas[3] = {f1, f2, f3};
+	ptFila filas[3] = {f1, f2, f3};
 	int i, id, status;
-	int idProcRodando;
 	int segmento;
 	int tempo=0;
 	FILA_cria(f1, 1);
 	FILA_cria(f2, 2);
 	FILA_cria(f3, 4);
 	fAtual = f1;
-	iAtual = 0;
+	tempo = 0;
 
 	/* Criando variável compartilhada, vou usá-la para passar os comandos lidos aqui para o escalonador */
 	segmento = shmget(CHAVE, MAX_STRING*sizeof(char), IPC_EXCL | S_IRUSR |S_IWUSR);
@@ -32,12 +54,14 @@ int main(int argc, char **argv){
 
 	/* Usando sinais para cuidar dos programas novos */
 	signal(SIGUSR1, criaNovoProcesso());
+	signal(SIGUSR2, processoIO());
+	signal(SIGCHLD, processoTermina());
 
 	/* Loop para tratar os programas em execução/espera */
 	do{
 		printf("passou 1 u.t. agora estamos em %d\n", tempo);
 	
-		if(FILA_topTempo(fAtual) == 0){
+		if(FILA_topTempo(fAtual) <= 0){
 			id = FILA_topTempo(fAtual);
 			FILA_remove(fAtual);
 			FILA_insere(filas[iAtual+1], id);
@@ -45,6 +69,7 @@ int main(int argc, char **argv){
 
 		FILA_atualiza(fAtual);
 		sleep(1);
+		tempo++;
 	}while(strcmp(comando, "exit") != 0);	
 
 	/* Encerrando... */
@@ -70,5 +95,29 @@ void criaNovoProcesso(int sinal){
 	if(id==0)
 		execv("./programa", args);
 	FILA_insere(f1,id);
+	fAtual = f1;
+	/*
+		Estou assumindo que caso um processo A na fila 2 esteja sendo executado e seja interrompido para dar lugar a um novo processo na B fila 1, não há necessidade de resetar o quantum do processo A. De modo que quando todos os processos na fila sejam esgotados, voltaremos a executar o processo A somente pelo quantum restante. 
+	*/
 	kill(getppid(), SIGCONT);
+}
+
+
+void processoIO(int sinal){
+	FILA_remove(fAtual);
+	if(!FILA_vazia(f1)) fAtual = f1;
+	else if (!FILA_vazia(f2)) fAtual = f2;
+	else fAtual = f3;
+	/*
+		Este processo é que chamou o escalonador, então ele fez isso enquanto estava executando e não depois de seu tempo acabar.
+		Nos reta saber se ele parou junto com o tempo do escalonador ou antes disso.
+	*/	
+}
+
+void processoTermina(int sinal){
+	printf("processo %d terminado\n", FILA_topId(fAtual));
+	FILA_remove(fAtual);
+	if(!FILA_vazia(f1)) fAtual = f1;
+	else if (!FILA_vazia(f2)) fAtual = f2;
+	else fAtual = f3;	
 }
