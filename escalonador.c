@@ -12,12 +12,16 @@
 #define MAX_STRING 80
 #define TRUE 1
 #define CHAVE 8180
+#define LIM_MAX 0.5D
+#define LIM_MIN -0.5D
 
 void criaNovoProcesso(int sinal);
 void processoTermina(int sinal);
 
 static char *comando;
 ptFila f1,f2,f3, fAtual;
+ptFila filas[3] = {f1, f2, f3};
+int indexAtual;
 int tempo;
 
 /*
@@ -38,15 +42,14 @@ int tempo;
 
 
 int main(int argc, char **argv){
-	ptFila filas[3] = {f1, f2, f3};
 	int i, id, status;
 	int segmento;
 	int tempo=0;
 	FILA_cria(f1, 1);
 	FILA_cria(f2, 2);
 	FILA_cria(f3, 4);
-	fAtual = f1;
 	tempo = 0;
+	indexAtual = -1;
 
 	/* Criando variável compartilhada, vou usá-la para passar os comandos lidos aqui para o escalonador */
 	segmento = shmget(CHAVE, MAX_STRING*sizeof(char), IPC_EXCL | S_IRUSR |S_IWUSR);
@@ -67,6 +70,10 @@ int main(int argc, char **argv){
 			FILA_insere(filas[iAtual+1], id);
 		}
 
+
+	else if(restante>LIM_MAX){
+	/* dentro da faixa de 'processo terminou no tempo certo' */
+
 		FILA_atualiza(fAtual);
 		sleep(1);
 		tempo++;
@@ -80,6 +87,8 @@ int main(int argc, char **argv){
 	FILA_libera(f3);
 	return 0;
 }
+
+/* Funcoes de controle de processos */
 
 void criaNovoProcesso(int sinal){
 	int id=0;
@@ -95,29 +104,64 @@ void criaNovoProcesso(int sinal){
 	if(id==0)
 		execv("./programa", args);
 	FILA_insere(f1,id);
-	fAtual = f1;
+	if(fAtual() != f1)
+		FILA_comecaCPU(f1, clock());
+	/* fila atual passa a ser f1 */
+	fProx();
 	/*
 		Estou assumindo que caso um processo A na fila 2 esteja sendo executado e seja interrompido para dar lugar a um novo processo na B fila 1, não há necessidade de resetar o quantum do processo A. De modo que quando todos os processos na fila sejam esgotados, voltaremos a executar o processo A somente pelo quantum restante. 
+	*/
+
+	/*
+		Fazemos o leitor continuar a executar. Ele havia parado ate que o escalonador pudesse criar o novo processo.
 	*/
 	kill(getppid(), SIGCONT);
 }
 
-
 void processoIO(int sinal){
-	FILA_remove(fAtual);
-	if(!FILA_vazia(f1)) fAtual = f1;
-	else if (!FILA_vazia(f2)) fAtual = f2;
-	else fAtual = f3;
 	/*
 		Este processo é que chamou o escalonador, então ele fez isso enquanto estava executando e não depois de seu tempo acabar.
-		Nos reta saber se ele parou junto com o tempo do escalonador ou antes disso.
-	*/	
+		Nos resta saber se ele parou junto com o tempo do escalonador ou antes disso.
+	*/
+	int id;
+	int restante = FILA_atualizaCPU(fAtual, clock());
+	/* dentro da faixa de 'mudar prioridade para cima' */
+	if(restante>LIM_MIN){
+		id = FILA_topId(fAtual);
+		FILA_remove();
+		FILA_insere(fNext			
+	}
+	/* dentro da faixa de 'acabou no tempo certo' */
+	else{
+	
+	}
 }
 
 void processoTermina(int sinal){
 	printf("processo %d terminado\n", FILA_topId(fAtual));
 	FILA_remove(fAtual);
-	if(!FILA_vazia(f1)) fAtual = f1;
-	else if (!FILA_vazia(f2)) fAtual = f2;
-	else fAtual = f3;	
+}
+
+/* Funcoes de controle de fila */
+
+ptFila fAtual(){
+	if(indexAtual<0 ||indexAtual>2) return NULL;
+	return filas[indexAtual];
+}
+
+/* 
+	Retorna primeira fila nao vazia, atribui index a indexAtual.
+	Retorna NULL se nenhuma fila estiver vazia, atribui -1 a indexAtual.
+*/
+ptFila fProx(){
+	int i;
+	indexAtual = 0;
+	for(i=0;i<NFILAS;i++){
+		if(!FILA_vazia(filas[i])){
+			indexAtual = i;
+			return filas[indexAtual];
+		}
+	}
+	indexAtual = -1;
+	return NULL;
 }
