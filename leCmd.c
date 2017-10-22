@@ -9,7 +9,6 @@
 #define MAX_ARGS 10
 #define MAX_STRING 80
 #define TRUE 1
-#define CHAVE 8180
 
 int contaEspacos(char *nome){
 	char *espaco;
@@ -19,45 +18,63 @@ int contaEspacos(char *nome){
 		if(espaco==NULL) break;
 		nEspacos++;
 	}
+	return nEspacos;
 }	
 
 int main(void){
-	int i, id, status;
-	char *comando;
-	char arg[MAX_STRING];
-	int segmento;
+	int i, id;
+	char comando[MAX_STRING];
+	int fd[2];
+
+	if(pipe(fd)){
+		printf("erro! ao criar pipe\n");
+		exit(1);
+	}
 	
-	/* Criando variável compartilhada, vou usá-la para passar os comandos lidos aqui para o escalonador */
-	segmento = shmget(CHAVE, MAX_STRING*sizeof(char), IPC_CREAT |  S_IRUSR |S_IWUSR);
-	comando = shmat(segmento, NULL, NULL);
+
+	printf("Digite a quantidade de programas que devem ser criados no início.\n");
+	scanf("%d", &i);
 
 	/* O processo escalonador sera filho deste processo */
 	id = fork();
-	if(id==0)
-		execl("./escalonador", NULL);
+	if(id==0){
+		dup2(fd[0], 0);
+		dup2(fd[1], 1);
+		execl("./escalonador", "/escalonador", NULL);
+	}
 	
-	/* Loop para ler os comandos */
-	do{
-		printf("Use 'prog a b c..' ou 'exit' para sair.\n");
-		scanf(" %80[^\n]", comando);
-		printf("comando digitado:\n%s\n", comando);
+	close(fd[0]);
 
-		if(contaEspacos(comando) > MAX_ARGS)
+	write(fd[1], "%d", i); 
+
+	/* Loop para ler os comandos */
+	for (;i>0;i--){
+		printf("Use 'prog a b c..'.\n");
+		scanf(" %80[^\n]", comando);
+		printf("%d - comando digitado:\n%s\n", getpid(), comando);
+
+		if(contaEspacos(comando) > MAX_ARGS){
 			printf("maximo de %d argumentos\n", MAX_ARGS);
 			continue;
 		}
-		/* Avisamos ao escalonador que um novo processo precisa ser criado */
-		kill(id, SIGUSR1);
-		/*
-			Paramos este processo, não queremos receber outro antes que o anterior ja tenha sido enviado.
-			E não queremos que este processo termine antes do outro.
-			Caso este processo termine, o outro deve ser avisado e terminar tambem.
-		*/
-		raise(SIGSTOP);
-	}while(strcmp(comando, "exit") != 0);	
 
-	/* Encerrando... */
-	shmdt(comando);
-	shmctl(segmento);
+		write(fd[1], comando, strlen(comando)+1);
+	}
+
 	return 0;
 }
+
+/*
+	
+	leio a quantidade e passo para o escalonador
+	leio os comandos de cada programa
+	conforme leio escrevo no pipe
+	o escalonador sabe quando termina de le pela quantidade
+
+	cria todos os processos
+	coloca todos na fila 1
+	comeca a contar tempo
+	...
+
+*/
+

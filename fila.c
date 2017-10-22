@@ -1,18 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "fila.h"
+
 /* tempo padrão de chamada I/O */
 #define TEMPO_IO 3.0D
 
 typedef struct elemento{
 	struct elemento *prox;
 	int id;
-	/* tempo relativo que este processo ainda deve executar antes que escalonador o troque por outro*/
-	double tempoRestante;	
-	/* tempo absoluto no ultimo momento em que o tempo restante foi atualizado */
-	double tempoUltimo;
+	/* tempo absoluto no qual o processo deve terminar */
+	double tempoTerminoCPU;
 	/*  tempo absoluto no qual o IO deve terminar */
-	double tempoIO;
+	double tempoTerminoIO;
 } Elemento;
 
 struct fila{
@@ -23,76 +23,77 @@ struct fila{
 };
 
 ptFila FILA_cria(double tempo){
-	ptFila = (Fila*) malloc(sizeof(Fila));
-	ptFila->tempo = tempo;
-	ptFila->prim = NULL;
-	ptFila->ult = NULL;
+	ptFila fila = (Fila*) malloc(sizeof(Fila));
+	fila->tempo = tempo;
+	fila->prim = NULL;
+	fila->ult = NULL;
+	return fila;
 }
-void FILA_insere(ptFila ptFila, int id, tempoAtual){
-	Elemento el;
+void FILA_insere(ptFila fila, int id, double tempoAtual){
+	Elemento *el;
 	el = (Elemento*) malloc(sizeof(Elemento));
 	el->id = id;
-	el->tempoRestante = ptFila->tempo;
-	el->tempoUltimo = tempoAtual;
-	el->tempoIO = 0.0D;
+	el->tempoTerminoCPU = tempoAtual+fila->tempo;
+	el->tempoTerminoIO = 0.0D;
 	el->prox = NULL;
-	if(FILA_vazia(ptFila))
-		ptFila->prim = el;
+	if(FILA_vazia(fila))
+		fila->prim = el;
 	else
-		ptFila->ult->prox = el;
-	ptFila->ult = el;
+		fila->ult->prox = el;
+	fila->ult = el;
 }
-void FILA_remove(ptFila ptFila){
+void FILA_remove(ptFila fila){
 	Elemento *remove;
-	if(FILA_vazia(ptFila)) return;
-	remove = ptFila->prim;
-	ptFila->prim = remove->prox;
-	if(ptFila->prim == NULL)
-		ptFila->ult = NULL;
+	if(FILA_vazia(fila)) return;
+	remove = fila->prim;
+	fila->prim = remove->prox;
+	if(fila->prim == NULL)
+		fila->ult = NULL;
 	free(remove);
 }
-void FILA_comecaIO(ptFila, double tempoAtual){
-	ptFila->prim->tempoIO = tempoAtual+TEMPO_IO;
+void FILA_comecaIO(ptFila fila, double tempoAtual){
+	fila->prim->tempoTerminoIO = tempoAtual+TEMPO_IO;
 }
-int FILA_comecaCPU(ptFila, double tempoAtual){
-	if(tempoAtual<ptFila->prim->tempoIO) return 1;
-	ptFila->prim->tempoUltimo = tempoAtual;
+int FILA_comecaCPU(ptFila fila, double tempoAtual){
+	if(tempoAtual<fila->prim->tempoTerminoIO) return 1;
+	fila->prim->tempoTerminoCPU = tempoAtual+fila->tempo;
 	return 0;
 }
-double FILA_atualizaCPU(ptFila, double tempoAtual){
-	ptFila->prim->tempoRestante -= tempoAtual-ptFila->prim->tempoUltimo;
-	ptFila->prim->tempoUltimo = tempoAtual;
-	return ptFila->prim->tempoRestante;
+double FILA_atualizaCPU(ptFila fila, double tempoAtual){
+	double tempoRestante = fila->prim->tempoTerminoCPU - tempoAtual;
+	return tempoRestante;
+}
+int FILA_topId(ptFila fila){
+	if(FILA_vazia(fila)) return -1;
+	return fila->prim->id;
 }
 /*	DEPRECATED TODO Remove*/
-int FILA_topId(ptFila ptFila){
-	if(FILA_vazia(ptFila)) return;
-	return ptFila->prim->id;
-}
-void FILA_topResetTempo(ptFila){
-	if(FILA_vazia(ptFila)) return;
-	ptFila->prim->tempo = ptFila->tempo;
-}
-double FILA_topTempo(ptFila ptFila){
-	if(FILA_vazia(ptFila)) return;
-	return ptFila->prim->tempo;
-}
+//void FILA_topResetTempo(ptFila){
+//	if(FILA_vazia(ptFila)) return;
+//	ptFila->prim->tempo = ptFila->tempo;
+//	return;
+//}
+//double FILA_topTempo(ptFila ptFila){
+//	if(FILA_vazia(ptFila)) return;
+//	return ptFila->prim->tempo;
+//	return 0.0D;
+//}
 /* DEPRECATED END */
 
-int FILA_vazia(ptFila ptFila){
-	return ptFila->prim == NULL;
+int FILA_vazia(ptFila fila){
+	return fila->prim == NULL;
 }
-void FILA_limpa(ptFila ptFila){
+void FILA_limpa(ptFila fila){
 	Elemento *remove;
-	ptFila->ult = NULL;
-	while(!FILA_vazia(ptFila)){
-		remove = ptFila->prim;
-		ptFila->prim = remove->next;
+	fila->ult = NULL;
+	while(!FILA_vazia(fila)){
+		remove = fila->prim;
+		fila->prim = remove->prox;
 		free(remove);
 	}
 }
-void FILA_libera(ptFila ptFila){
-	FILA_limpa(ptFila);
-	free(ptFila);
+void FILA_libera(ptFila fila){
+	FILA_limpa(fila);
+	free(fila);
 }
 
