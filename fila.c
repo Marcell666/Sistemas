@@ -4,7 +4,7 @@
 #include "fila.h"
 
 /* tempo padrão de chamada I/O */
-#define TEMPO_IO 3.0D
+#define TEMPO_IO 3
 
 typedef struct elemento{
 	struct elemento *prox;
@@ -34,7 +34,7 @@ void FILA_insere(ptFila fila, int id, int tempoAtual){
 	el = (Elemento*) malloc(sizeof(Elemento));
 	el->id = id;
 	el->tempoTerminoCPU = tempoAtual+fila->tempo;
-	el->tempoTerminoIO = 0.0D;
+	el->tempoTerminoIO = 0;
 	el->prox = NULL;
 	if(FILA_vazia(fila))
 		fila->prim = el;
@@ -96,4 +96,3 @@ void FILA_libera(ptFila fila){
 	FILA_limpa(fila);
 	free(fila);
 }
-

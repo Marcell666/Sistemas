@@ -12,8 +12,6 @@
 #define MAX_ARGS  10
 #define MAX_STRING 80
 #define TRUE 1
-#define LIM_MAX 0.5D
-#define LIM_MIN -0.5D
 
 ptFila f1;
 
@@ -40,9 +38,12 @@ int main(int argc, char **argv){
 	signal(SIGUSR2, processoTermina);
 	
 	/* Loop para criar os processos */
-	criaNovoProcesso(f1, "programa 2 4 5");
-	criaNovoProcesso(f1, "programa 3 1 2");
-	criaNovoProcesso(f1, "programa 1 2 1");
+	criaNovoProcesso(f1, "programa 1 3");
+	criaNovoProcesso(f1, "programa 2 3");
+
+	//criaNovoProcesso(f1, "programa 2 4 5");
+	//criaNovoProcesso(f1, "programa 3 1 2");
+	//criaNovoProcesso(f1, "programa 1 2 1");
 	id = FILA_topId(fAtual());
 	kill(id, SIGCONT);
 
@@ -69,6 +70,7 @@ int main(int argc, char **argv){
 				FILA_insere(fAnt(), id, tempo);//coloca numa mais baixa	
 				printf("colocando processo %d numa fila mais baixa\n", id);
 			}
+			/* Caso um processo tenha terminado antes do tempo esperado, ele deve ser movido para uma fila de nivel mais alto */
 			else if(solicitouIO && tempoRestante >0){
 				FILA_insere(fProx(), id, tempo);//coloca numa mais alta			
 				printf("colocando processo %d numa fila mais alta\n", id);
@@ -77,7 +79,7 @@ int main(int argc, char **argv){
 				Caso o processo tenha terminado no tempo correto, ele é movido para o final da fila */	
 			else if(solicitouIO && tempoRestante<=0){
 				FILA_insere(fAtual(), id, tempo);//coloca na mesma
-			printf("colocando processo %d na mesma fila\n", id);			
+				printf("colocando processo %d na mesma fila\n", id);			
 			}
 
 			id = FILA_topId(fAtual());
@@ -119,6 +121,7 @@ void criaNovoProcesso(ptFila f, char *comando){
 
 void processoIO(int sinal){
 	printf("Processo %d solicitou IO em tempo %d\n", FILA_topId(fAtual()), tempo);
+	FILA_comecaIO(fAtual(), tempo);
 	solicitouIO = 1;
 }
 
