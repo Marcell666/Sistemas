@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 #include <time.h>
 
 #include "fila.h"
@@ -24,19 +25,44 @@ void criaNovoProcesso(ptFila f, char *comando);
 void processoTermina(int sinal);
 void processoIO(int sinal);
 
+
+https://stackoverflow.com/questions/14726401/starting-point-for-clock-monotonic
+/*clock monotonic*/
+
+unsigned int getTime(){
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_usec;
+}
+
 int main(int argc, char **argv){
 	f1 = FILA_cria(2);
 	double tempo = 0;
 	double tempoRestante;
 	int id;
+	
+	int i, e;
+	suseconds_t lastTime;
 
 	signal(SIGUSR1, processoIO);
-	signal(SIGCHLD, processoTermina);
+	signal(SIGUSR2, processoTermina);
+	
 
 	/* Loop para criar os processos */
 	criaNovoProcesso(f1, "programa 2 4 5");
 	criaNovoProcesso(f1, "programa 3 1 2");
 	criaNovoProcesso(f1, "programa 1 2 1");
+	id = FILA_topId(fAtual());
+	
+	lastTime = getTime();
+	for(i=1;i<21;i++){
+		sleep(1);
+		printf("time:%u\n", getTime()-lastTime);
+		lastTime=getTime();
+	}
+	kill(id, SIGCONT);
+
+
 
 	/* Loop para tratar os programas em execução/espera */
 	while(TRUE){
@@ -49,9 +75,12 @@ int main(int argc, char **argv){
 		printf("tempoR1:%lf\n", tempoRestante);
 		if(tempoRestante < LIM_MIN){
 			id = FILA_topId(fAtual());
+			kill(id, SIGSTOP);
 			printf("colocando processo %d numa fila mais baixa\n", id);
 			FILA_remove(fAtual());
 			FILA_insere(fAnt(), id, clock());
+			id = FILA_topId(fAtual());
+			kill(id, SIGCONT);
 		}
 	}
 
@@ -67,7 +96,6 @@ void criaNovoProcesso(ptFila f, char *comando){
 	int i=1;
 	char arg[MAX_STRING];
 	char *args[MAX_ARGS];
-	printf("Novo processo a ser criado\n%s\n", comando);
 	strcpy(arg, comando);
 	args[0] = strtok(arg, " ");
 	while(TRUE){
@@ -75,11 +103,14 @@ void criaNovoProcesso(ptFila f, char *comando){
 		if(args[i]==NULL) break;
 		i++;
 	}
-	printf("%s\n", comando);
 	id = fork();
-	if(id==0)
+	if(id==0){
+		printf("%d - Novo processo\n%s\n", getpid(), comando);
+		raise(SIGSTOP);
 		execv("./programa", args);
+	}
 	FILA_insere(f,id, clock() );
+	
 }
 
 void processoIO(int sinal){
@@ -104,6 +135,8 @@ void processoIO(int sinal){
 		printf("colocando processo %d na mesma fila\n", id);
 		FILA_insere(fAtual(), id, clock());
 	}
+	id = FILA_topId(fAtual());
+	kill(id, SIGCONT);
 }
 
 void processoTermina(int sinal){
@@ -111,7 +144,7 @@ void processoTermina(int sinal){
 	FILA_remove(fAtual());
 	//TODO colocar f2 e f3 tambem
 	if(FILA_vazia(f1)){
-		printf("todos os procesos encerraram, terminando programa\n");
+		printf("todos os processos encerraram, terminando programa\n");
 		exit(1);
 	}
 }
