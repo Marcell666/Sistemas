@@ -59,7 +59,7 @@ int FILA_comecaCPU(ptFila fila, double tempoAtual){
 	fila->prim->tempoTerminoCPU = tempoAtual+fila->tempo;
 	return 0;
 }
-double FILA_atualizaCPU(ptFila fila, double tempoAtual){
+double FILA_tempoRestante(ptFila fila, double tempoAtual){
 	double tempoRestante = fila->prim->tempoTerminoCPU - tempoAtual;
 	return tempoRestante;
 }
