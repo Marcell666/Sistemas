@@ -10,26 +10,26 @@ typedef struct elemento{
 	struct elemento *prox;
 	int id;
 	/* tempo absoluto no qual o processo deve terminar */
-	double tempoTerminoCPU;
+	int tempoTerminoCPU;
 	/*  tempo absoluto no qual o IO deve terminar */
-	double tempoTerminoIO;
+	int tempoTerminoIO;
 } Elemento;
 
 struct fila{
 	Elemento *prim;
 	Elemento *ult;
 	/* tempo de uso padrao desta fila */
-	double tempo;
+	int tempo;
 };
 
-ptFila FILA_cria(double tempo){
+ptFila FILA_cria(int tempo){
 	ptFila fila = (Fila*) malloc(sizeof(Fila));
 	fila->tempo = tempo;
 	fila->prim = NULL;
 	fila->ult = NULL;
 	return fila;
 }
-void FILA_insere(ptFila fila, int id, double tempoAtual){
+void FILA_insere(ptFila fila, int id, int tempoAtual){
 	Elemento *el;
 	el = (Elemento*) malloc(sizeof(Elemento));
 	el->id = id;
@@ -51,16 +51,16 @@ void FILA_remove(ptFila fila){
 		fila->ult = NULL;
 	free(remove);
 }
-void FILA_comecaIO(ptFila fila, double tempoAtual){
+void FILA_comecaIO(ptFila fila, int tempoAtual){
 	fila->prim->tempoTerminoIO = tempoAtual+TEMPO_IO;
 }
-int FILA_comecaCPU(ptFila fila, double tempoAtual){
+int FILA_comecaCPU(ptFila fila, int tempoAtual){
 	if(tempoAtual<fila->prim->tempoTerminoIO) return 1;
 	fila->prim->tempoTerminoCPU = tempoAtual+fila->tempo;
 	return 0;
 }
-double FILA_tempoRestante(ptFila fila, double tempoAtual){
-	double tempoRestante = fila->prim->tempoTerminoCPU - tempoAtual;
+int FILA_tempoRestante(ptFila fila, int tempoAtual){
+	int tempoRestante = fila->prim->tempoTerminoCPU - tempoAtual;
 	return tempoRestante;
 }
 int FILA_topId(ptFila fila){

@@ -25,24 +25,15 @@ void criaNovoProcesso(ptFila f, char *comando);
 void processoTermina(int sinal);
 void processoIO(int sinal);
 
-
-https://stackoverflow.com/questions/14726401/starting-point-for-clock-monotonic
-/*clock monotonic*/
-
-unsigned int getTime(){
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	return tv.tv_usec;
-}
+int solicitouIO;
 
 int main(int argc, char **argv){
-	f1 = FILA_cria(2);
-	double tempo = 0;
-	double tempoRestante;
+	int tempo=0;
+	int tempoRestante;
 	int id;
-	
-	int i, e;
-	suseconds_t lastTime;
+	f1 = FILA_cria(2);
+	solicitouIO=0;
+
 
 	signal(SIGUSR1, processoIO);
 	signal(SIGUSR2, processoTermina);
@@ -53,35 +44,41 @@ int main(int argc, char **argv){
 	criaNovoProcesso(f1, "programa 3 1 2");
 	criaNovoProcesso(f1, "programa 1 2 1");
 	id = FILA_topId(fAtual());
-	
-	lastTime = getTime();
-	for(i=1;i<21;i++){
-		sleep(1);
-		printf("time:%u\n", getTime()-lastTime);
-		lastTime=getTime();
-	}
 	kill(id, SIGCONT);
-
-
 
 	/* Loop para tratar os programas em execução/espera */
 	while(TRUE){
-		if(tempo-clock()<250) continue;
-		tempo = clock();
+		sleep(1);
 		printf("passou 1/4 de u.t. agora estamos em %lf\n", tempo);
 
-		tempoRestante = FILA_tempoRestante(fAtual(), clock());
-		/* Caso um processo tenha extrapolado o tempo, ele deve ser movido para uma fila de nivel mais baixo */
+		tempoRestante = FILA_tempoRestante(fAtual(), tempo);
 		printf("tempoR1:%lf\n", tempoRestante);
-		if(tempoRestante < LIM_MIN){
+
+		if(!solicitou && tempoRestante>0) continue;
+
+
 			id = FILA_topId(fAtual());
 			kill(id, SIGSTOP);
 			printf("colocando processo %d numa fila mais baixa\n", id);
 			FILA_remove(fAtual());
-			FILA_insere(fAnt(), id, clock());
+
+			/* Caso um processo tenha extrapolado o tempo, ele deve ser movido para uma fila de nivel mais baixo */
+			if(!solicitouIO && tempoRestante<=0 )
+				FILA_insere(fAnt(), id, tempo);//coloca numa mais baixa
+			else if(solicitouIO && tempoRestante >0)
+				FILA_insere(fProx(), id, tempo);//coloca numa mais alta
+			/*	Dentro da faixa de 'acabou no tempo certo'
+				Caso o processo tenha terminado no tempo correto, ele é movido para o final da fila */
+			else if(solicitouIO && tempoRestante<=0)
+				FILA_insere(fAtual(), id, tempo);//coloca na mesma			
+
 			id = FILA_topId(fAtual());
+			printf("executando processo %d, que e o proximo da fila\n", id);
 			kill(id, SIGCONT);
-		}
+			solicitouIO = 0;
+
+		
+		tempo++;
 	}
 
 	/* Encerrando... */
@@ -109,34 +106,12 @@ void criaNovoProcesso(ptFila f, char *comando){
 		raise(SIGSTOP);
 		execv("./programa", args);
 	}
-	FILA_insere(f,id, clock() );
+	FILA_insere(f,id, tempo );
 	
 }
 
 void processoIO(int sinal){
-	/*
-		Este processo é aquele que chamou o escalonador, então ele fez isso enquanto estava executando e não depois de seu tempo acabar.
-		Nos resta saber se ele parou junto com o tempo do escalonador ou antes disso.
-	*/
-	int id;
-	double tempoRestante = FILA_tempoRestante(fAtual(), clock());
-	printf("tempoR2:%lf\n", tempoRestante);
-	id = FILA_topId(fAtual());
-	FILA_remove(fAtual());
-	/*	Dentro da faixa de 'mudar prioridade para cima'
-		Caso um processo tenha terminado antes do tempo acabar, ele deve ser movido para uma fila de nivel mais alto */
-	if(tempoRestante>LIM_MAX){
-		printf("colocando processo %d numa fila mais alta\n", id);
-		FILA_insere(fProx(), id, clock());
-	}
-	/*	Dentro da faixa de 'acabou no tempo certo'
-		Caso o processo tenha terminado no tempo correto, ele é movido para o final da fila */
-	else{
-		printf("colocando processo %d na mesma fila\n", id);
-		FILA_insere(fAtual(), id, clock());
-	}
-	id = FILA_topId(fAtual());
-	kill(id, SIGCONT);
+	solicitouIO = 1;
 }
 
 void processoTermina(int sinal){
@@ -145,6 +120,9 @@ void processoTermina(int sinal){
 	//TODO colocar f2 e f3 tambem
 	if(FILA_vazia(f1)){
 		printf("todos os processos encerraram, terminando programa\n");
+		
+		/* Encerrando... */
+		FILA_libera(f1);
 		exit(1);
 	}
 }
