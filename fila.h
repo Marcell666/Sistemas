@@ -11,7 +11,3 @@ int FILA_topId(ptFila ptFila);
 int FILA_vazia(ptFila fila);
 void FILA_limpa(ptFila fila);
 void FILA_libera(ptFila fila);
-
-
-
-

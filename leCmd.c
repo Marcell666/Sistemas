@@ -63,18 +63,3 @@ int main(void){
 
 	return 0;
 }
-
-/*
-	
-	leio a quantidade e passo para o escalonador
-	leio os comandos de cada programa
-	conforme leio escrevo no pipe
-	o escalonador sabe quando termina de le pela quantidade
-
-	cria todos os processos
-	coloca todos na fila 1
-	comeca a contar tempo
-	...
-
-*/
-

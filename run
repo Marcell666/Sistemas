@@ -1,0 +1,7 @@
+#!/bin/bash
+
+kill -s SIGKILL 3565
+kill -s SIGKILL 3566
+kill -s SIGKILL 3567
+kill -s SIGKILL 3568
+

@@ -15,6 +15,13 @@
 #define LIM_MAX 0.5D
 #define LIM_MIN -0.5D
 
+/*	TODO	
+
+	Isso está DESATUALIZADO, mas mesmo assim, aqui tem algumas partes importantes.
+	Ver mainF.c
+
+*/
+
 void criaNovoProcesso(int sinal);
 void processoTermina(int sinal);
 

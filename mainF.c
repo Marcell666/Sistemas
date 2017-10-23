@@ -25,20 +25,20 @@ void criaNovoProcesso(ptFila f, char *comando);
 void processoTermina(int sinal);
 void processoIO(int sinal);
 
+int tempo;
 int solicitouIO;
 
 int main(int argc, char **argv){
-	int tempo=0;
 	int tempoRestante;
 	int id;
-	f1 = FILA_cria(2);
+	tempo=0;
 	solicitouIO=0;
 
+	f1 = FILA_cria(2);
 
 	signal(SIGUSR1, processoIO);
 	signal(SIGUSR2, processoTermina);
 	
-
 	/* Loop para criar os processos */
 	criaNovoProcesso(f1, "programa 2 4 5");
 	criaNovoProcesso(f1, "programa 3 1 2");
@@ -49,36 +49,41 @@ int main(int argc, char **argv){
 	/* Loop para tratar os programas em execução/espera */
 	while(TRUE){
 		sleep(1);
-		printf("passou 1/4 de u.t. agora estamos em %lf\n", tempo);
+		printf("passou 1 u.t. agora estamos em %d\n", tempo);
 
 		tempoRestante = FILA_tempoRestante(fAtual(), tempo);
-		printf("tempoR1:%lf\n", tempoRestante);
+		printf("tempoRestante:%d\n", tempoRestante);
 
-		if(!solicitou && tempoRestante>0) continue;
+		tempo++;
+
+		if(!solicitouIO && tempoRestante>0) continue;
 
 
 			id = FILA_topId(fAtual());
 			kill(id, SIGSTOP);
-			printf("colocando processo %d numa fila mais baixa\n", id);
+
 			FILA_remove(fAtual());
 
 			/* Caso um processo tenha extrapolado o tempo, ele deve ser movido para uma fila de nivel mais baixo */
-			if(!solicitouIO && tempoRestante<=0 )
-				FILA_insere(fAnt(), id, tempo);//coloca numa mais baixa
-			else if(solicitouIO && tempoRestante >0)
-				FILA_insere(fProx(), id, tempo);//coloca numa mais alta
+			if(!solicitouIO && tempoRestante<=0 ){
+				FILA_insere(fAnt(), id, tempo);//coloca numa mais baixa	
+				printf("colocando processo %d numa fila mais baixa\n", id);
+			}
+			else if(solicitouIO && tempoRestante >0){
+				FILA_insere(fProx(), id, tempo);//coloca numa mais alta			
+				printf("colocando processo %d numa fila mais alta\n", id);
+			}
 			/*	Dentro da faixa de 'acabou no tempo certo'
-				Caso o processo tenha terminado no tempo correto, ele é movido para o final da fila */
-			else if(solicitouIO && tempoRestante<=0)
-				FILA_insere(fAtual(), id, tempo);//coloca na mesma			
+				Caso o processo tenha terminado no tempo correto, ele é movido para o final da fila */	
+			else if(solicitouIO && tempoRestante<=0){
+				FILA_insere(fAtual(), id, tempo);//coloca na mesma
+			printf("colocando processo %d na mesma fila\n", id);			
+			}
 
 			id = FILA_topId(fAtual());
 			printf("executando processo %d, que e o proximo da fila\n", id);
 			kill(id, SIGCONT);
 			solicitouIO = 0;
-
-		
-		tempo++;
 	}
 
 	/* Encerrando... */
@@ -102,21 +107,26 @@ void criaNovoProcesso(ptFila f, char *comando){
 	}
 	id = fork();
 	if(id==0){
-		printf("%d - Novo processo\n%s\n", getpid(), comando);
-		raise(SIGSTOP);
+		printf("criado:%d por: %d - tempo %d - Novo processo\n%s\n", getpid(), getppid(), tempo, comando);
 		execv("./programa", args);
+		exit(1);
 	}
-	FILA_insere(f,id, tempo );
+	FILA_insere(f,id, 0);
+	printf("getpid %d parando processo %d\n", getpid(), id);
+	kill(id, SIGSTOP);
 	
 }
 
 void processoIO(int sinal){
+	printf("Processo %d solicitou IO em tempo %d\n", FILA_topId(fAtual()), tempo);
 	solicitouIO = 1;
 }
 
 void processoTermina(int sinal){
+	int id;
 	printf("processo %d terminado\n", FILA_topId(fAtual()));
 	FILA_remove(fAtual());
+		
 	//TODO colocar f2 e f3 tambem
 	if(FILA_vazia(f1)){
 		printf("todos os processos encerraram, terminando programa\n");
@@ -125,6 +135,8 @@ void processoTermina(int sinal){
 		FILA_libera(f1);
 		exit(1);
 	}
+	id = FILA_topId(fAtual());
+	kill(id, SIGCONT);
 }
 
 /* Funcoes de controle de fila */
