@@ -21,7 +21,7 @@ int main(int argc, char **argv){
 		printf("%d - termina rajada\n", getpid());
 		kill(getppid(), SIGUSR1);
 	}
-	kill(getppid(), SIGUSR2);
+	//kill(getppid(), SIGUSR2);
 	printf("processo %d para terminar...\n", id);
 	return 0;
 }

@@ -4,7 +4,7 @@ typedef Fila* ptFila;
 ptFila FILA_cria(int tempo);
 void FILA_insere(ptFila fila, int id, int tempoAtual);
 void FILA_remove(ptFila fila);
-void FILA_comecaIO(ptFila fila, ptFila filaIO, int tempoAtual);
+void FILA_comecaIO(ptFila deFila, ptFila paraFila, ptFila filaIO, int tempoAtual);
 void FILA_atualizaIO(ptFila fila, int tempoAtual);
 int FILA_comecaCPU(ptFila fila, int tempoAtual);
 int FILA_tempoRestante(ptFila fila, int tempoAtual);

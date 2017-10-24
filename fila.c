@@ -54,11 +54,11 @@ void FILA_remove(ptFila fila){
 		fila->ult = NULL;
 	free(remove);
 }
-void FILA_comecaIO(ptFila fila, ptFila filaIO, int tempoAtual){
-	int id = fila->prim->id;
-	FILA_remove(fila);
+void FILA_comecaIO(ptFila deFila, ptFila paraFila, ptFila filaIO, int tempoAtual){
+	int id = deFila->prim->id;
+	FILA_remove(deFila);
 	FILA_insere(filaIO, id, tempoAtual);
-	filaIO->prim->filaOriginal = fila;
+	filaIO->prim->filaOriginal = paraFila;
 	filaIO->prim->tempoTerminoIO = tempoAtual+TEMPO_IO;
 }
 void FILA_atualizaIO(ptFila fila, int tempoAtual){
@@ -99,6 +99,7 @@ void FILA_atualizaIO(ptFila fila, int tempoAtual){
 int FILA_comecaCPU(ptFila fila, int tempoAtual){
 	if(tempoAtual<fila->prim->tempoTerminoIO) return 1;
 	fila->prim->tempoTerminoCPU = tempoAtual+fila->tempo;
+	printf("processo %d comecado em %d deve acabar em %d\n", fila->prim->id, tempoAtual, fila->prim->tempoTerminoCPU);
 	return 0;
 }
 int FILA_tempoRestante(ptFila fila, int tempoAtual){
