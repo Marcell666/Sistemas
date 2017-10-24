@@ -64,36 +64,37 @@ int main(int argc, char **argv){
 
 		tempo++;
 
+		/* Nem o tempo acabou nem o programa solicitou I/O então basta continuar executando */
 		if(!solicitouIO && tempoRestante>0) continue;
 
+		id = FILA_topId(fAtual());
+		kill(id, SIGSTOP);
 
-			id = FILA_topId(fAtual());
-			kill(id, SIGSTOP);
+		FILA_remove(fAtual());
 
-			FILA_remove(fAtual());
+		/* Caso um processo tenha extrapolado o tempo, ele deve ser movido para uma fila de nivel mais baixo */
+		if(!solicitouIO && tempoRestante<=0 ){
+			FILA_insere(fAnt(), id, tempo);//coloca numa mais baixa	
+			printf("colocando processo %d numa fila mais baixa\n", id);
+		}
+		/* Caso um processo tenha terminado antes do tempo esperado, ele deve ser movido para uma fila de nivel mais alto
+		Temos que colocar o processo que pediu I/O em uma fila de I/O */
+		else if(solicitouIO && tempoRestante >0){
+			FILA_insere(fProx(), id, tempo);//coloca numa mais alta			
+			printf("colocando processo %d numa fila mais alta\n", id);
+		}
+		/*	Dentro da faixa de 'acabou no tempo certo'
+			Caso o processo tenha terminado no tempo correto, ele é movido para o final da fila */	
+		else if(solicitouIO && tempoRestante<=0){
+			FILA_insere(fAtual(), id, tempo);//coloca na mesma
+			printf("colocando processo %d na mesma fila\n", id);			
+		}
 
-			/* Caso um processo tenha extrapolado o tempo, ele deve ser movido para uma fila de nivel mais baixo */
-			if(!solicitouIO && tempoRestante<=0 ){
-				FILA_insere(fAnt(), id, tempo);//coloca numa mais baixa	
-				printf("colocando processo %d numa fila mais baixa\n", id);
-			}
-			/* Caso um processo tenha terminado antes do tempo esperado, ele deve ser movido para uma fila de nivel mais alto
-			Temos que colocar o processo que pediu I/O em uma fila de I/O */
-			else if(solicitouIO && tempoRestante >0){
-				FILA_insere(fProx(), id, tempo);//coloca numa mais alta			
-				printf("colocando processo %d numa fila mais alta\n", id);
-			}
-			/*	Dentro da faixa de 'acabou no tempo certo'
-				Caso o processo tenha terminado no tempo correto, ele é movido para o final da fila */	
-			else if(solicitouIO && tempoRestante<=0){
-				FILA_insere(fAtual(), id, tempo);//coloca na mesma
-				printf("colocando processo %d na mesma fila\n", id);			
-			}
-
-			id = FILA_topId(fAtual());
-			printf("executando processo %d, que e o proximo da fila\n", id);
-			kill(id, SIGCONT);
-			solicitouIO = 0;
+		id = FILA_topId(fAtual());
+		printf("executando processo %d, que e o proximo da fila\n", id);
+		FILA_comecaCPU(fAtual, tempo);
+		kill(id, SIGCONT);
+		solicitouIO = 0;
 	}
 
 	/* Encerrando... */

@@ -80,6 +80,8 @@ void FILA_atualizaIO(ptFila fila, int tempoAtual){
 			/* Não estou removendo do topo, não posso usar a remove() */
 			else{
 				ant->prox = el->prox;
+				if(el->prox == NULL)
+					fila->ult = ant;
 				ant = el;
 				el = el->prox;
 				free(ant);
