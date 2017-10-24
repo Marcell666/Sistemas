@@ -10,6 +10,7 @@ int main(int argc, char **argv){
 	int rajadas = argc;
 	id = getpid();
 	printf("%d processo criado\n", getpid());
+	raise(SIGSTOP);
 	for (i=1;i<rajadas;i++){
 		tempoAtual = atoi(argv[i]);
 		for(e=0;e<tempoAtual;e++){

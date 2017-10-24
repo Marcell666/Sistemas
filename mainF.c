@@ -36,7 +36,7 @@ int main(int argc, char **argv){
 	solicitouIO=0;
 
 	f1 = FILA_cria(2);
-	f1 = FILA_cria(0);
+	filaIO = FILA_cria(666);
 
 	signal(SIGUSR1, processoIO);
 	signal(SIGUSR2, processoTermina);
@@ -123,7 +123,7 @@ void criaNovoProcesso(ptFila f, char *comando){
 	}
 	FILA_insere(f,id, 0);
 	printf("getpid %d parando processo %d\n", getpid(), id);
-	kill(id, SIGSTOP);
+	//kill(id, SIGSTOP);
 	
 }
 
