@@ -6,6 +6,8 @@
 /* tempo padrão de chamada I/O */
 #define TEMPO_IO 3
 
+
+/*inserir aqui a fila que pertence?*/
 typedef struct elemento{
 	struct elemento *prox;
 	int id;

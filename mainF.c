@@ -13,6 +13,9 @@
 #define MAX_STRING 80
 #define TRUE 1
 
+/*Podiamos criar uma estrutura pra cada processo com seu pid, tempo de i/o e fila que pertence, assim conseguimos colocar ele em uma fila de i/o saber quanto tempo ele tem que ficar lá e na hora de retirar, alem disso podemos guardar o tempo de execução que ele fez (já está na fila) */
+
+
 ptFila f1;
 
 ptFila fAtual();
@@ -42,7 +45,7 @@ int main(int argc, char **argv){
 	criaNovoProcesso(f1, "programa 2 3");
 
 	//criaNovoProcesso(f1, "programa 2 4 5");
-	//criaNovoProcesso(f1, "programa 3 1 2");
+	criaNovoProcesso(f1, "programa 3 1 2");
 	//criaNovoProcesso(f1, "programa 1 2 1");
 	id = FILA_topId(fAtual());
 	kill(id, SIGCONT);
@@ -70,7 +73,8 @@ int main(int argc, char **argv){
 				FILA_insere(fAnt(), id, tempo);//coloca numa mais baixa	
 				printf("colocando processo %d numa fila mais baixa\n", id);
 			}
-			/* Caso um processo tenha terminado antes do tempo esperado, ele deve ser movido para uma fila de nivel mais alto */
+			/* Caso um processo tenha terminado antes do tempo esperado, ele deve ser movido para uma fila de nivel mais alto
+			Temos que colocar o processo que pediu I/O em uma fila de I/O */
 			else if(solicitouIO && tempoRestante >0){
 				FILA_insere(fProx(), id, tempo);//coloca numa mais alta			
 				printf("colocando processo %d numa fila mais alta\n", id);
