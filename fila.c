@@ -10,6 +10,7 @@
 /*inserir aqui a fila que pertence?*/
 typedef struct elemento{
 	struct elemento *prox;
+	struct fila *filaOriginal;
 	int id;
 	/* tempo absoluto no qual o processo deve terminar */
 	int tempoTerminoCPU;
@@ -53,8 +54,45 @@ void FILA_remove(ptFila fila){
 		fila->ult = NULL;
 	free(remove);
 }
-void FILA_comecaIO(ptFila fila, int tempoAtual){
-	fila->prim->tempoTerminoIO = tempoAtual+TEMPO_IO;
+void FILA_comecaIO(ptFila fila, ptFila filaIO, int tempoAtual){
+	int id = fila->prim->id;
+	FILA_remove(fila);
+	FILA_insere(filaIO, id, tempoAtual);
+	filaIO->prim->filaOriginal = fila;
+	filaIO->prim->tempoTerminoIO = tempoAtual+TEMPO_IO;
+}
+void FILA_atualizaIO(ptFila fila, int tempoAtual){
+	int id;
+	ptFila filaOriginal;
+	Elemento *el, *ant=NULL;
+	el = fila->prim;
+	while (el != NULL){
+		if(tempoAtual >= el->tempoTerminoIO){
+			filaOriginal = el->filaOriginal;
+			id = el->id;
+
+			/* Estou removendo do topo, basta usar a remove() */
+			if(ant==NULL){
+				el = el->prox;
+				FILA_remove(fila);
+			}
+
+			/* Não estou removendo do topo, não posso usar a remove() */
+			else{
+				ant->prox = el->prox;
+				ant = el;
+				el = el->prox;
+				free(ant);
+			}
+			FILA_insere(filaOriginal, id, tempoAtual);
+			
+		}
+		else{
+			ant = el;
+			el = el->prox;
+		}
+	}
+			
 }
 int FILA_comecaCPU(ptFila fila, int tempoAtual){
 	if(tempoAtual<fila->prim->tempoTerminoIO) return 1;

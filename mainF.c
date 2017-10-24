@@ -13,9 +13,9 @@
 #define MAX_STRING 80
 #define TRUE 1
 
-/*Podiamos criar uma estrutura pra cada processo com seu pid, tempo de i/o e fila que pertence, assim conseguimos colocar ele em uma fila de i/o saber quanto tempo ele tem que ficar lá e na hora de retirar, alem disso podemos guardar o tempo de execução que ele fez (já está na fila) */
+/*Podiamos criar uma estrutura pra cada processo com seu pid, tempo de i/o e fila que pertence, assim conseguimos colocar ele em uma fila de i/o saber quanto tempo ele tem que ficar lá e a hora de retirar, alem disso podemos guardar o tempo de execução que ele fez (já está na fila) */
 
-
+ptFila filaIO;
 ptFila f1;
 
 ptFila fAtual();
@@ -36,6 +36,7 @@ int main(int argc, char **argv){
 	solicitouIO=0;
 
 	f1 = FILA_cria(2);
+	f1 = FILA_cria(0);
 
 	signal(SIGUSR1, processoIO);
 	signal(SIGUSR2, processoTermina);
@@ -57,6 +58,9 @@ int main(int argc, char **argv){
 
 		tempoRestante = FILA_tempoRestante(fAtual(), tempo);
 		printf("tempoRestante:%d\n", tempoRestante);
+		
+		/* atualizando fila de processos em IO */
+		FILA_atualizaIO(filaIO, tempo);
 
 		tempo++;
 
@@ -125,7 +129,7 @@ void criaNovoProcesso(ptFila f, char *comando){
 
 void processoIO(int sinal){
 	printf("Processo %d solicitou IO em tempo %d\n", FILA_topId(fAtual()), tempo);
-	FILA_comecaIO(fAtual(), tempo);
+	FILA_comecaIO(fAtual(), filaIO, tempo);
 	solicitouIO = 1;
 }
 
