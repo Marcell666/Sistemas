@@ -46,7 +46,7 @@ int main(int argc, char **argv){
 	criaNovoProcesso(f1, "programa 2 3");
 
 	//criaNovoProcesso(f1, "programa 2 4 5");
-	criaNovoProcesso(f1, "programa 3 1 2");
+	//criaNovoProcesso(f1, "programa 3 1 2");
 	//criaNovoProcesso(f1, "programa 1 2 1");
 	id = FILA_topId(fAtual());
 	kill(id, SIGCONT);
