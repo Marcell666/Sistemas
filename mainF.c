@@ -6,6 +6,9 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <time.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/stat.h>
 
 #include "fila.h"
 
@@ -32,8 +35,18 @@ int solicitouIO;
 int main(int argc, char **argv){
 	int tempoRestante;
 	int id;
+	int segmento;
+	int* flag;
+	int aux;
+	char comando[81];
+	
 	tempo=0;
 	solicitouIO=0;
+
+	// aloca a memória compartilhada
+	segmento = shmget (8182, sizeof (int), S_IRUSR);	
+	// associa a memória compartilhada ao processo
+	flag = (int*) shmat (segmento, 0, 0);
 
 	f1 = FILA_cria(2);
 	filaIO = FILA_cria(666);
@@ -42,7 +55,7 @@ int main(int argc, char **argv){
 	signal(SIGUSR2, processoTermina);
 	
 	/* Loop para criar os processos */
-	criaNovoProcesso(f1, "programa 1 3");
+	//criaNovoProcesso(f1, "programa 1 3");
 	criaNovoProcesso(f1, "programa 2 3");
 
 	//criaNovoProcesso(f1, "programa 2 4 5");
@@ -56,6 +69,12 @@ int main(int argc, char **argv){
 	while(TRUE){
 		sleep(1);
 		tempo++;
+		if (*flag==1) //tem coisa pra ler
+		{
+			aux=read(0, comando,81);
+			criaNovoProcesso(f1, comando);
+			*flag=0;			
+		}
 		printf("passou 1 u.t. agora estamos em %d\n", tempo);
 
 		if(!FILA_vazia(filaIO))
@@ -131,6 +150,9 @@ int main(int argc, char **argv){
 	}
 
 	/* Encerrando... */
+	// libera a memória compartilhada do processo
+	shmdt(flag);
+	//libera Fila
 	FILA_libera(f1);
 	return 0;
 }
