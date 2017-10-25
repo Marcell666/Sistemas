@@ -72,7 +72,12 @@ int main(int argc, char **argv){
 		if(!solicitouIO && tempoRestante>=0)
 			continue;
 
-		kill(id, SIGSTOP);
+
+		if(id>0)
+			kill(id, SIGSTOP);
+		else{
+			printf("BUG NOUTRO LUGAR\n");
+		}
 
 		/* Caso um processo tenha extrapolado o tempo, ele deve ser movido para uma fila de nivel mais alto e menor prioridade */
 		if(!solicitouIO && tempoRestante<0 ){
@@ -116,7 +121,12 @@ int main(int argc, char **argv){
 		else{
 			printf("executando processo %d, que e o proximo da fila\n", id);
 			FILA_comecaCPU(fAtual(), tempo);
-			kill(id, SIGCONT);
+
+			if(id>0)
+				kill(id, SIGCONT);
+			else{
+				printf("BUG ACOLA\n");
+			}
 		}
 	}
 
@@ -147,7 +157,11 @@ void criaNovoProcesso(ptFila f, char *comando){
 	}
 	FILA_insere(f,id, 0);
 	printf("getpid %d parando processo %d\n", getpid(), id);
-	kill(id, SIGSTOP);
+	if(id>0)
+		kill(id, SIGSTOP);
+	else{
+		printf("BUG AQUI\n");
+	}
 	
 }
 
@@ -171,7 +185,11 @@ void processoTermina(int sinal){
 		exit(0);
 	}
 	id = FILA_topId(fAtual());
-	kill(id, SIGCONT);
+	if(id>0)
+		kill(id, SIGCONT);
+	else{
+		printf("BUG ALI\n");
+	}
 }
 
 /* Funcoes de controle de fila */
