@@ -37,7 +37,6 @@ int main(int argc, char **argv){
 	int id;
 	int segmento;
 	int* flag;
-	int aux;
 	char comando[81];
 	
 	tempo=0;
@@ -55,8 +54,17 @@ int main(int argc, char **argv){
 	signal(SIGUSR2, processoTermina);
 	
 	/* Loop para criar os processos */
+
+	while (*flag>0) //tem coisa pra ler
+	{
+		read(0, comando, 81);
+		printf("comando lido:%s\n", comando);
+		criaNovoProcesso(f1, comando);
+		*flag-=1;			
+	}
+
 	//criaNovoProcesso(f1, "programa 1 3");
-	criaNovoProcesso(f1, "programa 2 3");
+	//criaNovoProcesso(f1, "programa 2 3");
 
 	//criaNovoProcesso(f1, "programa 2 4 5");
 	//criaNovoProcesso(f1, "programa 3 1 2");
@@ -71,7 +79,8 @@ int main(int argc, char **argv){
 		tempo++;
 		if (*flag==1) //tem coisa pra ler
 		{
-			aux=read(0, comando,81);
+			read(0, comando, 81);
+			printf("comando lido:%s\n", comando);
 			criaNovoProcesso(f1, comando);
 			*flag=0;			
 		}
