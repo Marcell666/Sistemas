@@ -14,6 +14,7 @@
 #define MAX_ARGS 10
 #define MAX_STRING 80
 #define TRUE 1
+#define CHAVE 8180
 
 int contaEspacos(char *nome){
 	char *espaco;
@@ -33,7 +34,7 @@ int main(void){
 	int fd[2];
 	int aux;
 	
-	segmento = shmget(8182, sizeof(int), IPC_CREAT | S_IRUSR | S_IWUSR);
+	segmento = shmget(CHAVE, sizeof(int), IPC_CREAT | S_IRUSR | S_IWUSR);
 	flag= (int*) shmat (segmento,0,0);
 	*flag=0;
 	if(pipe(fd)<0){

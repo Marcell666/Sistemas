@@ -15,6 +15,7 @@
 #define MAX_ARGS  10
 #define MAX_STRING 80
 #define TRUE 1
+#define CHAVE 8180
 
 /*Podiamos criar uma estrutura pra cada processo com seu pid, tempo de i/o e fila que pertence, assim conseguimos colocar ele em uma fila de i/o saber quanto tempo ele tem que ficar lá e a hora de retirar, alem disso podemos guardar o tempo de execução que ele fez (já está na fila) */
 
@@ -43,7 +44,7 @@ int main(int argc, char **argv){
 	solicitouIO=0;
 
 	// aloca a memória compartilhada
-	segmento = shmget (8182, sizeof (int), S_IRUSR);	
+	segmento = shmget (CHAVE, sizeof (int), S_IRUSR);	
 	// associa a memória compartilhada ao processo
 	flag = (int*) shmat (segmento, 0, 0);
 
