@@ -16,6 +16,8 @@ typedef struct elemento{
 	int tempoTerminoCPU;
 	/*  tempo absoluto no qual o IO deve terminar */
 	int tempoTerminoIO;
+	/* tempo absoluto no qual o processo solicitou IO */
+	int tempoInicioIO;
 } Elemento;
 
 struct fila{
@@ -111,6 +113,10 @@ int FILA_tempoRestante(ptFila fila, int tempoAtual){
 int FILA_topId(ptFila fila){
 	if(FILA_vazia(fila)) return -1;
 	return fila->prim->id;
+}
+int FILA_topTempoIO(ptFila fila){
+	if(FILA_vazia(fila)) return -1;
+	return fila->prim->tempoInicioIO;
 }
 /*	DEPRECATED TODO Remove*/
 //void FILA_topResetTempo(ptFila){
