@@ -173,6 +173,7 @@ void processoIO(int sinal){
 void processoTermina(int sinal){
 	int id;
 	printf("processo %d terminado\n", FILA_topId(fAtual()));
+	id = FILA_topId(fAtual());
 	FILA_remove(fAtual());
 		
 	//TODO colocar f2 e f3 tambem
@@ -184,7 +185,6 @@ void processoTermina(int sinal){
 		FILA_libera(filaIO);
 		exit(0);
 	}
-	id = FILA_topId(fAtual());
 	if(id>0)
 		kill(id, SIGCONT);
 	else{
