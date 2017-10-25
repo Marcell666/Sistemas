@@ -8,7 +8,7 @@
 int main (int argc, char *argv[])
 {
 	int segmento;
-
+	
 	int* flag;
 	char msg[81];
 	
@@ -16,21 +16,26 @@ int main (int argc, char *argv[])
 	
 	
 	// aloca a memória compartilhada
-	segmento = shmget (8180, sizeof (int), S_IRUSR);
+	segmento = shmget (8182, sizeof (int), S_IRUSR);
 	
 	// associa a memória compartilhada ao processo
 	flag = (int*) shmat (segmento, 0, 0); // comparar o retorno com -1
 	
-	//printf("%d\n",*flag);
 	
 	while (1)
 	{
+		
 		if(*flag==1)
 		{
-			fgets(msg,80,stdin);
+		
+			printf("flag %d\n",*flag);
+			scanf (" %80[^\n]",msg);
 			*flag=0;
 			printf("sou filho e a msg lida foi Mensagem lida: %s\n", msg);
 		}
+		else if (*flag==-1)
+			break;
+
 	}
 	
 	// libera a memória compartilhada do processo
