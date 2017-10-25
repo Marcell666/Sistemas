@@ -58,17 +58,11 @@ int main(int argc, char **argv){
 	while (*flag>0) //tem coisa pra ler
 	{
 		read(0, comando, 81);
-		printf("comando lido:%s\n", comando);
+		printf("comando lido inicio:%s\n", comando);
 		criaNovoProcesso(f1, comando);
 		*flag-=1;			
 	}
 
-	//criaNovoProcesso(f1, "programa 1 3");
-	//criaNovoProcesso(f1, "programa 2 3");
-
-	//criaNovoProcesso(f1, "programa 2 4 5");
-	//criaNovoProcesso(f1, "programa 3 1 2");
-	//criaNovoProcesso(f1, "programa 1 2 1");
 	id = FILA_topId(fAtual());
 	printf("Iniciando processo %d\n", id);
 	kill(id, SIGCONT);
@@ -80,7 +74,7 @@ int main(int argc, char **argv){
 		if (*flag==1) //tem coisa pra ler
 		{
 			read(0, comando, 81);
-			printf("comando lido:%s\n", comando);
+			printf("comando lido no meio:%s\n", comando);
 			criaNovoProcesso(f1, comando);
 			*flag=0;			
 		}
