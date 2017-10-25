@@ -58,7 +58,11 @@ int main(int argc, char **argv){
 	// associa a memória compartilhada ao processo
 	flag = (int*) shmat (segmento, 0, 0);
 
-	f1 = FILA_cria(2);
+	
+	f1 = FILA_cria(1);
+	f2 = FILA_cria(2);
+	f3 = FILA_cria(4);
+	
 	filaIO = FILA_cria(666);
 
 	signal(SIGUSR1, processoIO);
@@ -222,7 +226,7 @@ void processoIO(int sinal){
 	tempoRestante = FILA_tempoRestante(fAtual(), tempo);
 	/* Caso um processo tenha terminado antes do tempo esperado, ele deve ser movido para uma fila de nivel mais baixo e maior prioridade.
 		Temos que colocar o processo que pediu I/O em uma fila de I/O */
-		else if(tempoRestante >0){
+		/*else*/ if(tempoRestante >0){
 			printf("colocando processo %d numa fila mais baixa\n", id);	
 			printf("colocando processo %d em I/O\n", id);
 			FILA_comecaIO(fAtual(), fAnt(), filaIO, tempo);	//coloca numa mais baixo		
@@ -291,21 +295,59 @@ ptFila fReset(){
 
 /* Retorna fila, um nivel de fila maior do que a atual (note que o nivel de fila é inversamente proporcional a prioridade) */
 ptFila fProx(){
-	/*
-	int i =  (indexAtual+1)%3;
+	
+	int i;// =  (indexAtual+1)%3;
+	//return filas[i];
+	switch (indexAtual)
+{
+   case 0:
+     i=1;
+   break;
+   
+   case 1:
+     i=2;
+   break;
+      
+   case 2:
+     i=2;
+   break;
+   default: //erro???
+     break;
+}
+	indexAtual=i; //aqui que sera o controle?
 	return filas[i];
-	*/
-	return f1;
+	
+	
+	//return f1;
 }
 
 /* Retorna fila, um nivel de fila menor do que a atual (note que o nivel de fila é inversamente proporcional a prioridade) */
 ptFila fAnt(){
-	/*
-	int i = indexAtual-1;
-	if (i<0)i = NFILAS-1;
+	
+	int i; //= indexAtual-1;
+	//if (i<0)i = NFILAS-1;
+	
+	switch (indexAtual)
+{
+   case 0:
+     i=0;
+   break;
+
+   case 1:
+     i=0;
+   break;
+      
+   case 2:
+     i=1;
+   break;
+   default: //erro???
+     break;
+}
+	indexAtual=i; //aqui que sera o controle?
+	
 	return filas[i];
-	*/
-	return f1;
+	
+	//return f1;
 }
 
 void encerra(int status){
