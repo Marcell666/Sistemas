@@ -60,6 +60,7 @@ void FILA_comecaIO(ptFila deFila, ptFila paraFila, ptFila filaIO, int tempoAtual
 	FILA_insere(filaIO, id, tempoAtual);
 	filaIO->prim->filaOriginal = paraFila;
 	filaIO->prim->tempoTerminoIO = tempoAtual+TEMPO_IO;
+	printf("FILA: processo %d comeca IO em %d deve acabar em %d\n", id, tempoAtual, filaIO->prim->tempoTerminoIO);
 }
 void FILA_atualizaIO(ptFila fila, int tempoAtual){
 	int id;
@@ -86,6 +87,7 @@ void FILA_atualizaIO(ptFila fila, int tempoAtual){
 				el = el->prox;
 				free(ant);
 			}
+			printf("FILA: processo %d acabou IO em %d\n", id, tempoAtual);
 			FILA_insere(filaOriginal, id, tempoAtual);
 			
 		}
@@ -99,7 +101,7 @@ void FILA_atualizaIO(ptFila fila, int tempoAtual){
 int FILA_comecaCPU(ptFila fila, int tempoAtual){
 	if(tempoAtual<fila->prim->tempoTerminoIO) return 1;
 	fila->prim->tempoTerminoCPU = tempoAtual+fila->tempo;
-	printf("processo %d comecado em %d deve acabar em %d\n", fila->prim->id, tempoAtual, fila->prim->tempoTerminoCPU);
+	printf("FILA: processo %d comeca CPU em %d deve acabar em %d\n", fila->prim->id, tempoAtual, fila->prim->tempoTerminoCPU);
 	return 0;
 }
 int FILA_tempoRestante(ptFila fila, int tempoAtual){

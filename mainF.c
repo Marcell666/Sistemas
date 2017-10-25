@@ -49,54 +49,49 @@ int main(int argc, char **argv){
 	//criaNovoProcesso(f1, "programa 3 1 2");
 	//criaNovoProcesso(f1, "programa 1 2 1");
 	id = FILA_topId(fAtual());
+	printf("Iniciando processo %d\n", id);
 	kill(id, SIGCONT);
 
 	/* Loop para tratar os programas em execução/espera */
 	while(TRUE){
 		sleep(1);
+		tempo++;
 		printf("passou 1 u.t. agora estamos em %d\n", tempo);
 
 		if(!FILA_vazia(filaIO))
 			FILA_atualizaIO(filaIO, tempo);
-		if(FILA_vazia(fAtual())){
-			tempo++;
+		if(FILA_vazia(fAtual()))
 			continue;
-		}		
 
 
 		id = FILA_topId(fAtual());
-
 		tempoRestante = FILA_tempoRestante(fAtual(), tempo);
 		printf("tempoRestante:%d do processo %d\n", tempoRestante, id);
-		
-		/* atualizando fila de processos em IO */
-
-		/* Nem o tempo acabou nem o programa solicitou I/O então basta continuar executando */
-		if(!solicitouIO && tempoRestante>0){
-			tempo++;
+	
+		/* Nem o tempo acabou, nem o programa solicitou I/O, então basta continuar executando */
+		if(!solicitouIO && tempoRestante>=0)
 			continue;
-		}
 
 		kill(id, SIGSTOP);
 
-		FILA_remove(fAtual());
-
-		/* Caso um processo tenha extrapolado o tempo, ele deve ser movido para uma fila de nivel mais baixo */
-		if(!solicitouIO && tempoRestante<=0 ){
-			FILA_insere(fAnt(), id, tempo);//coloca numa mais baixa	
-			printf("colocando processo %d numa fila mais baixa\n", id);
-		}
-		/* Caso um processo tenha terminado antes do tempo esperado, ele deve ser movido para uma fila de nivel mais alto
-		Temos que colocar o processo que pediu I/O em uma fila de I/O */
-		else if(solicitouIO && tempoRestante >0){
-			//FILA_insere(fProx(), id, tempo);//coloca numa mais alta	
+		/* Caso um processo tenha extrapolado o tempo, ele deve ser movido para uma fila de nivel mais alto e menor prioridade */
+		if(!solicitouIO && tempoRestante<0 ){
 			printf("colocando processo %d numa fila mais alta\n", id);	
+			FILA_remove(fAtual());
+			FILA_insere(fProx(), id, tempo);//coloca numa mais alto	
+		}
+		/* Caso um processo tenha terminado antes do tempo esperado, ele deve ser movido para uma fila de nivel mais baixo e maior prioridade.
+		Temos que colocar o processo que pediu I/O em uma fila de I/O */
+		else if(solicitouIO && tempoRestante >=0){
+			//FILA_insere(fAnt(), id, tempo);//coloca numa mais baixo	
+			printf("colocando processo %d numa fila mais baixa\n", id);	
 			printf("colocando processo %d em I/O\n", id);
-			FILA_comecaIO(fAtual(), fProx(), filaIO, tempo);		
+			FILA_comecaIO(fAtual(), fAnt(), filaIO, tempo);		
 		}
 		/*	Dentro da faixa de 'acabou no tempo certo'
-			Caso o processo tenha terminado no tempo correto, ele é movido para o final da fila */	
-		else if(solicitouIO && tempoRestante<=0){
+			Caso o processo tenha terminado no tempo correto, ele é movido para o final da fila 
+		Temos que colocar o processo que pediu I/O em uma fila de I/O */	
+		else if(solicitouIO && tempoRestante<0){
 			//FILA_insere(fAtual(), id, tempo);//coloca na mesma
 			printf("colocando processo %d no final da mesma fila\n", id);
 			printf("colocando processo %d em I/O\n", id);			
@@ -123,8 +118,6 @@ int main(int argc, char **argv){
 			FILA_comecaCPU(fAtual(), tempo);
 			kill(id, SIGCONT);
 		}
-	
-		tempo++;
 	}
 
 	/* Encerrando... */
@@ -154,7 +147,7 @@ void criaNovoProcesso(ptFila f, char *comando){
 	}
 	FILA_insere(f,id, 0);
 	printf("getpid %d parando processo %d\n", getpid(), id);
-	//kill(id, SIGSTOP);
+	kill(id, SIGSTOP);
 	
 }
 
