@@ -162,7 +162,7 @@ void processoTermina(int sinal){
 	FILA_remove(fAtual());
 		
 	//TODO colocar f2 e f3 tambem
-	if(FILA_vazia(f1)){
+	if(FILA_vazia(filaIO) && FILA_vazia(f1)){
 		printf("todos os processos encerraram, terminando programa\n");
 		
 		/* Encerrando... */
