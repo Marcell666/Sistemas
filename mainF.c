@@ -119,7 +119,7 @@ int main(int argc, char **argv){
 		if(solicitouIO || tempoRestante<0){
 
 			if(solicitouIO)
-				tempoRestante = FILA(fAtual(), FILA_getTempoIO(fAtual()));
+				tempoRestante = FILA_tempoRestante(fAtual(), FILA_getTempoIO(fAtual()));
 
 			if(id>0)
 				kill(id, SIGSTOP);
@@ -210,6 +210,7 @@ void criaNovoProcesso(ptFila f, char *comando){
 }
 
 void processoIO(int sinal){
+	int id = FILA_topId(fAtual());
 	printf("Processo %d solicitou IO em tempo %d\n", id, tempo);
 	solicitouIO = 1;
 	FILA_setTempoIO(fAtual(), tempo);
