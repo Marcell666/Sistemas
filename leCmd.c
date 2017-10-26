@@ -95,6 +95,7 @@ int main(void){
 		*flag = 0;
 /*
 		do{
+
 			printf("Use './prog a b c..' e 'exit' para terminar.\n");		
 	
 			scanf(" %s\n", comando);

@@ -16,8 +16,6 @@ typedef struct elemento{
 	int tempoTerminoCPU;
 	/*  tempo absoluto no qual o IO deve terminar */
 	int tempoTerminoIO;
-	/* tempo absoluto no qual o processo solicitou IO */
-	int tempoInicioIO;
 } Elemento;
 
 struct fila{
@@ -57,7 +55,9 @@ void FILA_remove(ptFila fila){
 	free(remove);
 }
 void FILA_comecaIO(ptFila deFila, ptFila paraFila, ptFila filaIO, int tempoAtual){
-	int id = deFila->prim->id;
+	printf("to na fila comeca i/o\n");
+	int id = deFila->prim->id;	
+	
 	FILA_remove(deFila);
 	FILA_insere(filaIO, id, tempoAtual);
 	filaIO->prim->filaOriginal = paraFila;
@@ -113,15 +113,6 @@ int FILA_tempoRestante(ptFila fila, int tempoAtual){
 int FILA_topId(ptFila fila){
 	if(FILA_vazia(fila)) return -1;
 	return fila->prim->id;
-}
-int FILA_getTempoIO(ptFila fila){
-	if(FILA_vazia(fila)) return -1;
-	return fila->prim->tempoInicioIO;
-}
-int FILA_setTempoIO(ptFila fila, int tempo){
-	if(FILA_vazia(fila)) return -1;
-	fila->prim->tempoInicioIO = tempo;
-	return 0;
 }
 /*	DEPRECATED TODO Remove*/
 //void FILA_topResetTempo(ptFila){
