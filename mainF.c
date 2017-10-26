@@ -160,10 +160,12 @@ int main(int argc, char **argv){
 			printf("pula para a fila de cima\n");
 			/* Precisamos parar o processo que estava rodando antes */
 			id = FILA_topId(filaTemp);
-			kill(id, SIGSTOP);
+			if(id>0)
+				kill(id, SIGSTOP);
 			/* E continuar o processo atual */
 			id = FILA_topId(fAtual());
-			kill(id, SIGCONT);
+			if(id>0)
+				kill(id, SIGCONT);
 		}
 
 
