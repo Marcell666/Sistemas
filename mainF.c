@@ -148,7 +148,7 @@ int main(int argc, char **argv){
 				FILA_comecaIO(fAtual(), fAtual(), filaIO, tempo);//coloca na mesma
 			}
 		}
-
+		solicitouIO = 0;
 		/*
 			Agora vamos checar se existe algum outro processo numa fila de priorade maior que está esperando para ser executado.
 			Se houver, precisamos trocar da fila atual para a fila dele.
