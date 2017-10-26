@@ -14,11 +14,11 @@ int main(int argc, char **argv){
 	for (i=0;i<rajadas;i++){
 		rajadaAtual = atoi(argv[i+1]);
 		for(e=0;e<rajadaAtual;e++){
-			printf("%d processo - %d/%d\n", id,e,rajadaAtual); //TODO deletar, deixar apenas o de baixo
+			//printf("%d processo - %d/%d\n", id,e,rajadaAtual); //TODO deletar, deixar apenas o de baixo
 			//printf("%d\n", id);
 			sleep(1);
 		}
-		printf("%d - termina rajada %d/%d\n", id, e, rajadaAtual);
+		//printf("%d - termina rajada %d/%d\n", id, e, rajadaAtual);
 		kill(getppid(), SIGUSR1);
 	}
 	kill(getppid(), SIGUSR2);
