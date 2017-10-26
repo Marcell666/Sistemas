@@ -114,9 +114,14 @@ int FILA_topId(ptFila fila){
 	if(FILA_vazia(fila)) return -1;
 	return fila->prim->id;
 }
-int FILA_topTempoIO(ptFila fila){
+int FILA_getTempoIO(ptFila fila){
 	if(FILA_vazia(fila)) return -1;
 	return fila->prim->tempoInicioIO;
+}
+int FILA_setTempoIO(ptFila fila, int tempo){
+	if(FILA_vazia(fila)) return -1;
+	fila->prim->tempoInicioIO = tempo;
+	return 0;
 }
 /*	DEPRECATED TODO Remove*/
 //void FILA_topResetTempo(ptFila){

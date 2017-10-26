@@ -12,7 +12,7 @@
 
 #include "fila.h"
 
-#define MAX_ARGS  10
+#define MAX_ARGS  10	
 #define MAX_STRING 80
 #define TRUE 1
 #define NFILAS 1
@@ -114,15 +114,17 @@ int main(int argc, char **argv){
 
 		tempoRestante = FILA_tempoRestante(fAtual(), tempo);
 		printf("tempoRestante:%d do processo %d\n", tempoRestante, id);
-
-		/* Nem o tempo acabou, nem o programa solicitou I/O, então basta continuar executando */
+		
+		/* Se o tempo acabou, ou o programa solicitou I/O, então algum processo deve ser trocado */
 		if(solicitouIO || tempoRestante<0){
+
+			if(solicitouIO)
+				tempoRestante = FILA(fAtual(), FILA_getTempoIO(fAtual()));
 
 			if(id>0)
 				kill(id, SIGSTOP);
-			else{
+			else
 				printf("BUG NOUTRO LUGAR\n");
-			}
 
 			/* Caso um processo tenha extrapolado o tempo, ele deve ser movido para uma fila de nivel mais alto e menor prioridade */
 			if(!solicitouIO && tempoRestante<0 ){
@@ -132,20 +134,18 @@ int main(int argc, char **argv){
 			}
 			/* Caso um processo tenha terminado antes do tempo esperado, ele deve ser movido para uma fila de nivel mais baixo e maior prioridade.
 			Temos que colocar o processo que pediu I/O em uma fila de I/O */
-			else if(solicitouIO && tempoRestante >=0){
-				//FILA_insere(fAnt(), id, tempo);//coloca numa mais baixo	
+			else if(solicitouIO && tempoRestante >0){
 				printf("colocando processo %d numa fila mais baixa\n", id);	
 				printf("colocando processo %d em I/O\n", id);
-				FILA_comecaIO(fAtual(), fAnt(), filaIO, tempo);		
+				FILA_comecaIO(fAtual(), fAnt(), filaIO, tempo);//coloca numa mais baixo	
 			}
 			/*	Dentro da faixa de 'acabou no tempo certo'
 				Caso o processo tenha terminado no tempo correto, ele é movido para o final da fila 
 			Temos que colocar o processo que pediu I/O em uma fila de I/O */	
-			else if(solicitouIO && tempoRestante<0){
-				//FILA_insere(fAtual(), id, tempo);//coloca na mesma
+			else if(solicitouIO && tempoRestante<=0){
 				printf("colocando processo %d no final da mesma fila\n", id);
 				printf("colocando processo %d em I/O\n", id);			
-				FILA_comecaIO(fAtual(), fAtual(), filaIO, tempo);			
+				FILA_comecaIO(fAtual(), fAtual(), filaIO, tempo);//coloca na mesma
 			}
 		}
 
@@ -210,6 +210,7 @@ void criaNovoProcesso(ptFila f, char *comando){
 void processoIO(int sinal){
 	printf("Processo %d solicitou IO em tempo %d\n", id, tempo);
 	solicitouIO = 1;
+	FILA_setTempoIO(fAtual(), tempo);
 }
 
 void processoTermina(int sinal){
