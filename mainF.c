@@ -259,14 +259,16 @@ ptFila fReset(){
 		}
 	}
 	indexAtual = -1;
-	*/
 	return NULL;
+	*/
+	return f1;
 }
 
 /* Retorna fila, um nivel de fila maior do que a atual (note que o nivel de fila é inversamente proporcional a prioridade) */
 ptFila fProx(){
 	/*
-	int i =  (indexAtual+1)%3;
+	int i =  indexAtual+1;
+	if (i>=NFILAS-1)i = NFILAS-1;
 	return filas[i];
 	*/
 	return f1;
@@ -276,7 +278,7 @@ ptFila fProx(){
 ptFila fAnt(){
 	/*
 	int i = indexAtual-1;
-	if (i<0)i = NFILAS-1;
+	if (i<0)i = 0;
 	return filas[i];
 	*/
 	return f1;
