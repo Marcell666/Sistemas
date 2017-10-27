@@ -1,0 +1,38 @@
+io             3
+f1 1         1   1
+io     3   3
+f2   2   1        1 END
+io
+f3
+
+3   1   1   2
+3+3+1+3+1+3+2 = 16
+
+
+como voce faz a cominucação entre escalonador e interpretador
+
+como voce faz para ... do escalonador?
+sleep
+
+tem limite de rajadas?
+20 rajadas
+
+como voce sinaliza que o processo acabaou?
+	
+voce trata processos sem rajada? Ou com rajada negativa? E ele é morto em algum momento?
+tente executar um exemplo assim
+
+quem esta convertendo as rajadas de string para inteiro?
+
+o que ocorre quando um processo muda de nivel e um processo (ja esta? / pede io?) naquele nivel?
+
+	quais os sinais que voce usou? e o que voce faz com eles? mostra ai
+	
+	é possivel dois processos sairem juntos do io e isso vai funcionar normal?
+	
+				tem como fazer com 5 1 1
+				
+				
+				
+				mask e unmask interruption
+				sigaction
