@@ -144,6 +144,10 @@ int main(int argc, char **argv){
 				printf("processo aguardando I/O\n");
 				continue;
 			}
+			else{
+				printf("Processo encontrado na fila %d\n", FILA_getIndex(fAtual()));
+				id = FILA_topId(fAtual());
+			}
 		}
 		tempoRestante = FILA_atualizaCPU(fAtual(), tempo);
 		//tempoRestante = FILA_tempoRestante(fAtual(), tempo);

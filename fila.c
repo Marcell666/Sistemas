@@ -106,7 +106,7 @@ void FILA_atualizaIO(ptFila fila, int tempoAtual){
 				el = el->prox;
 				free(ant);
 			}
-			printf("FILA: processo %d acabou IO em %d\n", id, tempoAtual);
+			printf("FILA: processo %d acabou IO em %d, indo para fila %d\n", id, tempoAtual, filaOriginal->index+1);
 			FILA_insere(filaOriginal, id, tempoAtual);
 			
 		}
