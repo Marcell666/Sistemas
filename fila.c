@@ -59,13 +59,12 @@ void FILA_remove(ptFila fila){
 	free(remove);
 }
 void FILA_comecaIO(ptFila deFila, ptFila paraFila, ptFila filaIO, int tempoAtual){
-	printf("to na fila comeca i/o\n");
 	int id = deFila->prim->id;	
 	
 	FILA_remove(deFila);
 	FILA_insere(filaIO, id, tempoAtual);
 	filaIO->prim->filaOriginal = paraFila;
-	filaIO->prim->tempoTerminoIO = tempoAtual;
+	filaIO->prim->tempoTerminoIO = tempoAtual+TEMPO_IO;
 	printf("FILA: processo %d comeca IO em %d deve acabar em %d\n", id, tempoAtual, filaIO->prim->tempoTerminoIO);
 }
 void FILA_atualizaIO(ptFila fila, int tempoAtual){

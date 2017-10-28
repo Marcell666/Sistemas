@@ -31,9 +31,23 @@ int contaEspacos(char *nome){
 	return nEspacos;
 }	
 
+
+int verificaComando(char *string){
+	int numero;
+	char comando[MAX_STRING];
+	char *arg;
+	strcpy(comando, string);
+	arg = strtok(comando, " ");
+	while(1){
+		arg = strtok(NULL, " ");
+		if(arg==NULL) return 1;
+		if(sscanf(arg, "%d", &numero) != 1) return 0;
+	}
+}
+
 int main(void){
 	int id;
-	char comando[MAX_STRING];
+	char comando[MAX_STRING] = " ";
 	int fd[2];
 	
 	//signal(SIGCHLD, encerra);
@@ -44,11 +58,8 @@ int main(void){
 	if(pipe(fd)<0){
 		printf("erro! ao criar pipe\n");
 		exit(1);
-	}	
-	
+	}
 
-	//printf("Digite a quantidade de programas que devem ser criados no início.\n");
-	//scanf(" %d", &i);
 	*flag=1;
 	
 	/* O processo escalonador sera filho deste processo */
@@ -77,38 +88,25 @@ int main(void){
 		close(fd[0]);
 		
 		/* Loop para ler os comandos */
-		
-		
+
 		do{
 
 			printf("Use './prog a b c..' e 'done' para terminar.\n");		
 	
 			scanf(" %80[^\n]", comando);
-			//printf("comando digitado A %s\n",comando);
+			printf("comando digitado:%s\n",comando);
+			if(!verificaComando(comando)){
+				printf("comando invalido!\n");				
+				continue;	
+			}
 			*flag+=1;
 			write(fd[1], comando, strlen(comando)+1);
 			
 	
 		}while(strcmp("done", comando));
 		*flag = 0;
-/*
-		do{
 
-			printf("Use './prog a b c..' e 'exit' para terminar.\n");		
-	
-			scanf(" %s\n", comando);
-			printf("comando digitado B %s\n",comando);	
-	
-			*flag+=1;
-			write(fd[1], comando, strlen(comando)+1);
-			printf("flag:%d", *flag);
-			
-
-	
-		}while(strcmp("exit", comando));
-*/
 		waitpid(id, NULL, 0);
-		while(1);		
 		printf("aguardando escalonador terminar\n");
 		printf("liberando flag \n");
 		// libera a memória compartilhada do processo
@@ -116,7 +114,7 @@ int main(void){
 		printf("liberando flag \n");
 		// libera a memória compartilhada
 		shmctl(segmento, IPC_RMID, 0);
-		printf("fechando saida  pelo pipe\n");
+		//fechando saida  pelo pipe
 		close(fd[1]);
 	}
 	encerra(0);
@@ -124,7 +122,7 @@ int main(void){
 }
 
 void encerra(int status){
-	printf("\t\tfilho encerrou\n");
+	printf("encerrando leitor\n");
 	shmdt(flag);
 	shmctl(segmento, IPC_RMID, 0);
 	exit(status);
