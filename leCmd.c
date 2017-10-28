@@ -31,9 +31,23 @@ int contaEspacos(char *nome){
 	return nEspacos;
 }	
 
+
+int verificaComando(char *string){
+	int numero;
+	char comando[MAX_STRING];
+	char *arg;
+	strcpy(comando, string);
+	arg = strtok(comando, " ");
+	while(1){
+		arg = strtok(NULL, " ");
+		if(arg==NULL) return 1;
+		if(sscanf(arg, "%d", &numero) != 1) return 0;
+	}
+}
+
 int main(void){
 	int id;
-	char comando[MAX_STRING];
+	char comando[MAX_STRING] = " ";
 	int fd[2];
 	
 	//signal(SIGCHLD, encerra);
@@ -74,14 +88,17 @@ int main(void){
 		close(fd[0]);
 		
 		/* Loop para ler os comandos */
-		
-		
+
 		do{
 
 			printf("Use './prog a b c..' e 'done' para terminar.\n");		
 	
 			scanf(" %80[^\n]", comando);
-			//printf("comando digitado A %s\n",comando);
+			printf("comando digitado:%s\n",comando);
+			if(!verificaComando(comando)){
+				printf("comando invalido!\n");				
+				continue;	
+			}
 			*flag+=1;
 			write(fd[1], comando, strlen(comando)+1);
 			

@@ -57,7 +57,7 @@ int main(int argc, char **argv){
 	f1 = FILA_cria(1, 0);
 	f2 = FILA_cria(2, 1);
 	f3 = FILA_cria(4, 2);
-	filaIO = FILA_cria(666, 3);
+	filaIO = FILA_cria(666, 666);
 	
 	filaAtual = f1;
 	
@@ -88,7 +88,7 @@ int main(int argc, char **argv){
 
 		/*
 			Trazer o codigo da funcao 'criaNovoProcesso' para ca foi a unica maneira que encontrei de me prevenir de um bug
-			O que acontece e que quando uma funcao é interrompida, depois ela nao continua de onde parou, ao inves disso ela continua da main.
+			O que acontece é que quando uma funcao é interrompida, depois o controle nao continua dele, de onde parou, ao inves disso ele para a função principal, e continua de lá.
 			Entao se o fork que vai usar a execl para se transformar no processo criado for parado no meio do caminho, depois ele não vai conseguir continuar, e teremos um processo fantasma, que não está executando normalmente.
 			Mas se o codigo estiver aqui, mesmo que seja parado entre o printf e a chamada para execl, depois vai continuar do mesmo lugar, assim o bug não acontece (eu espero).		
 		*/
@@ -103,6 +103,7 @@ int main(int argc, char **argv){
 		id = fork();
 		if(id==0){
 			printf("%d cria: %d - tempo %d - Novo processo\n%s\n", getppid(), getpid(), tempo, comando);
+			/* O problema aconteceria se este processo fosse interrompido aqui */
 			execv("./programa", args);
 			printf("dafuq");
 			encerra(1);
@@ -124,9 +125,12 @@ int main(int argc, char **argv){
 
 	/* Loop para tratar os programas em execução/espera */
 	while(TRUE){
+		
 		sleep(1);
-		tempo++;
-		printf("\npassou 1 u.t. agora estamos em %d, e na fila %d\n", tempo, indexAtual+1);
+//		if(!solicitouIO && !tempoTermino){
+			tempo++;
+			printf("\npassou 1 u.t. agora estamos em %d, e na fila %d\n", tempo, indexAtual+1);
+//		}
 
 		/* Atualiza os processos em I/O	*/
 		if(!FILA_vazia(filaIO))
@@ -135,7 +139,7 @@ int main(int argc, char **argv){
 		id = FILA_topId(fAtual());
 		//printf("id= %d \n",id);
 		if(id<=0){
-			printf("fila atual vazia, procurando outro processo\n");
+			printf("fila atual (index:%d) vazia, procurando outro processo\n", FILA_getIndex(fAtual()));
 			if(fReset() == NULL){
 				/*Se f reset retorna null então as tres filas estão vazias, e a fila de io tem alguem esperando IO*/
 				printf("processo aguardando I/O\n");
@@ -166,7 +170,9 @@ int main(int argc, char **argv){
 			/*
 				O processo não extrapolou o tempo de execução dele, vamos checar se ele solicitou IO, e qual era o tempo restante quando ele fez isso.
 				Precisamos calcular o tempo restante quando ele pediu IO, e não o tempo restante de agora. */
+			printf("processo havia solicitado io em tempo %d\n", FILA_getTempoComecoIO(fAtual()));
 			tempoRestante = FILA_tempoRestante(fAtual(), FILA_getTempoComecoIO(fAtual()));
+			printf("e o tempo restante e %d\n", tempoRestante);
 			/*
 				Caso um processo tenha terminado antes do tempo esperado, ele deve ser movido para uma fila de nivel mais baixo e maior prioridade.
 				Temos que colocar o processo que pediu I/O em uma fila de I/O */
@@ -194,7 +200,9 @@ int main(int argc, char **argv){
 		if(fReset()!=NULL){
 			/* Precisamos continuar o processo atual */
 			id = FILA_topId(fAtual());
-			kill(id, SIGCONT);
+			printf("executando %d a partir de tempo %d, \n", id, tempo);
+			if(id>0) kill(id, SIGCONT);
+			else printf("achei bug\n");
 		}
 
 
@@ -208,36 +216,6 @@ int main(int argc, char **argv){
 
 
 /* Funcoes de controle de processos */
-
-/*
-void criaNovoProcesso(ptFila f, char *comando){
-	int id=0;
-	int i=1;
-	char arg[MAX_STRING];
-	char *args[MAX_ARGS];
-	strcpy(arg, comando);
-	args[0] = strtok(arg, " ");
-	while(TRUE){
-		args[i] = strtok(NULL, " ");
-		if(args[i]==NULL) break;
-		i++;
-	}
-	id = fork();
-	if(id==0){
-		printf("criado:%d por: %d - tempo %d - Novo processo id\n%s\n", getpid(), getppid(), tempo, comando);
-		execv("./programa", args);
-		printf("dafuq");
-		encerra(1);
-	}	
-	FILA_insere(f,id, 0);
-	printf("getpid %d parando processo %d\n", getpid(), id);
-	if(id>0)
-		kill(id, SIGSTOP);
-	else{
-		printf("BUG AQUI\n");
-	}
-}
-*/
 
 void processoIO(int sinal){
 	int id = FILA_topId(fAtual());
@@ -280,9 +258,11 @@ ptFila fReset(){
 			return filas[i];
 		}
 	}
-
-	if(FILA_vazia(filaIO))
+	printf("fReset ninguem nas filas, checando filaIO\n");
+	if(FILA_vazia(filaIO)){
+		printf("fReset encerra\n");
 		encerra(0);
+	}
 	
 	return NULL;
 }
@@ -306,12 +286,12 @@ ptFila fAnt(){
 }
 
 void encerra(int status){
-	printf("encerrando\n");
-	shmdt(flag);
-	shmctl(segmento, IPC_RMID, 0);
+	printf("encerrando escalonador\n");
 	FILA_libera(f1);
 	FILA_libera(f2);
 	FILA_libera(f3);
 	FILA_libera(filaIO);
+	shmdt(flag);
+	shmctl(segmento, IPC_RMID, 0);
 	exit(status);
 }

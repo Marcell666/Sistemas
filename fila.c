@@ -130,7 +130,7 @@ int FILA_setTempoComecoIO(ptFila fila, int tempo){
 int FILA_getIndex(ptFila fila){
 	return fila->index;
 }
-/*	DEPRECATED TODO Remove*/
+/*	DEPRECATED TODO Remover*/
 //void FILA_topResetTempo(ptFila){
 //	if(FILA_vazia(ptFila)) return;
 //	ptFila->prim->tempo = ptFila->tempo;
