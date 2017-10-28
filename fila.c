@@ -16,6 +16,8 @@ typedef struct elemento{
 	int tempoTerminoCPU;
 	/*  tempo absoluto no qual o IO deve terminar */
 	int tempoTerminoIO;
+	/*  tempo absoluto no qual foi solicitado IO*/
+	int tempoComecoIO;
 } Elemento;
 
 struct fila{
@@ -23,13 +25,15 @@ struct fila{
 	Elemento *ult;
 	/* tempo de uso padrao desta fila */
 	int tempo;
+	int index;
 };
 
-ptFila FILA_cria(int tempo){
+ptFila FILA_cria(int tempo, int index){
 	ptFila fila = (Fila*) malloc(sizeof(Fila));
 	fila->tempo = tempo;
 	fila->prim = NULL;
 	fila->ult = NULL;
+	fila->index = index;
 	return fila;
 }
 void FILA_insere(ptFila fila, int id, int tempoAtual){
@@ -55,7 +59,8 @@ void FILA_remove(ptFila fila){
 	free(remove);
 }
 void FILA_comecaIO(ptFila deFila, ptFila paraFila, ptFila filaIO, int tempoAtual){
-	int id = deFila->prim->id;
+	int id = deFila->prim->id;	
+	
 	FILA_remove(deFila);
 	FILA_insere(filaIO, id, tempoAtual);
 	filaIO->prim->filaOriginal = paraFila;
@@ -111,6 +116,19 @@ int FILA_tempoRestante(ptFila fila, int tempoAtual){
 int FILA_topId(ptFila fila){
 	if(FILA_vazia(fila)) return -1;
 	return fila->prim->id;
+}
+
+int FILA_getTempoComecoIO(ptFila fila){
+	if(FILA_vazia(fila)) return -1;
+	return fila->prim->tempoComecoIO;
+}
+int FILA_setTempoComecoIO(ptFila fila, int tempo){
+	if(FILA_vazia(fila)) return -1;
+	fila->prim->tempoComecoIO = tempo;
+	return 0;
+}
+int FILA_getIndex(ptFila fila){
+	return fila->index;
 }
 /*	DEPRECATED TODO Remove*/
 //void FILA_topResetTempo(ptFila){

@@ -18,8 +18,9 @@ int main(int argc, char **argv){
 			//printf("%d\n", id);
 			sleep(1);
 		}
-		printf("%d - termina rajada %d/%d\n", id, e, rajadaAtual);
-		kill(getppid(), SIGUSR1);
+		//printf("%d - termina rajada %d/%d\n", id, e, rajadaAtual);
+		if(i<rajadas-1)
+			kill(getppid(), SIGUSR1);
 	}
 	kill(getppid(), SIGUSR2);
 	printf("processo %d para terminar...\n", id);
