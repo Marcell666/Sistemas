@@ -112,9 +112,8 @@ int main(int argc, char **argv){
 		printf("getpid %d parando processo %d\n", getpid(), id);
 		if(id>0)
 			kill(id, SIGSTOP);
-		else{
+		else
 			printf("BUG AQUI\n");
-		}
 
 		*flag-=1;			
 	}
@@ -135,18 +134,19 @@ int main(int argc, char **argv){
 		/* Atualiza os processos em I/O	*/
 		if(!FILA_vazia(filaIO))
 			FILA_atualizaIO(filaIO, tempo);
-				
+
 		id = FILA_topId(fAtual());
 		//printf("id= %d \n",id);
 		if(id<=0){
 			printf("fila atual (index:%d) vazia, procurando outro processo\n", FILA_getIndex(fAtual()));
 			if(fReset() == NULL){
-				/*Se f reset retorna null então as tres filas estão vazias, e a fila de io tem alguem esperando IO*/
+				/*Se fReset retorna null então as tres filas estão vazias, e a fila de io tem alguem esperando IO*/
 				printf("processo aguardando I/O\n");
 				continue;
 			}
 		}
-		tempoRestante = FILA_tempoRestante(fAtual(), tempo);
+		tempoRestante = FILA_atualizaCPU(fAtual(), tempo);
+		//tempoRestante = FILA_tempoRestante(fAtual(), tempo);
 		printf("tempoRestante:%d do processo %d\n", tempoRestante, id);
 
 		if(solicitouTermino){
@@ -170,9 +170,8 @@ int main(int argc, char **argv){
 			/*
 				O processo não extrapolou o tempo de execução dele, vamos checar se ele solicitou IO, e qual era o tempo restante quando ele fez isso.
 				Precisamos calcular o tempo restante quando ele pediu IO, e não o tempo restante de agora. */
-			printf("processo havia solicitado io em tempo %d\n", FILA_getTempoComecoIO(fAtual()));
-			tempoRestante = FILA_tempoRestante(fAtual(), FILA_getTempoComecoIO(fAtual()));
-			printf("e o tempo restante e %d\n", tempoRestante);
+			tempoRestante = FILA_getTempoRestanteComecoIO(fAtual());
+			printf("processo %d havia solicitado io com tempo restante %d\n", id, tempoRestante);
 			/*
 				Caso um processo tenha terminado antes do tempo esperado, ele deve ser movido para uma fila de nivel mais baixo e maior prioridade.
 				Temos que colocar o processo que pediu I/O em uma fila de I/O */
@@ -221,7 +220,7 @@ void processoIO(int sinal){
 	int id = FILA_topId(fAtual());
 	printf("Processo %d solicitou IO em tempo %d\n", id, tempo);
 	if(id>0){
-		FILA_setTempoComecoIO(fAtual(), tempo);
+		FILA_setTempoRestanteComecoIO(fAtual());
 		kill(id, SIGSTOP);
 		solicitouIO = 1;
 	}

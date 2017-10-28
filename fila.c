@@ -12,12 +12,20 @@ typedef struct elemento{
 	struct elemento *prox;
 	struct fila *filaOriginal;
 	int id;
+	/* tempo restante para o processo terminar */
+	int tempoRestante;
+	/* tempo restante para o io acabar */
+	int tempoRestanteIO;
+	/* tempo restante quando este processo pediu IO */
+	int tempoRestanteComecoIO;
 	/* tempo absoluto no qual o processo deve terminar */
-	int tempoTerminoCPU;
+	//int tempoTerminoCPU;
+	
 	/*  tempo absoluto no qual o IO deve terminar */
-	int tempoTerminoIO;
+	//int tempoTerminoIO;
 	/*  tempo absoluto no qual foi solicitado IO*/
-	int tempoComecoIO;
+	//int tempoComecoIO;
+
 } Elemento;
 
 struct fila{
@@ -40,8 +48,11 @@ void FILA_insere(ptFila fila, int id, int tempoAtual){
 	Elemento *el;
 	el = (Elemento*) malloc(sizeof(Elemento));
 	el->id = id;
-	el->tempoTerminoCPU = tempoAtual+fila->tempo;
-	el->tempoTerminoIO = 0;
+	el->tempoRestante = fila->tempo;
+	el->tempoRestanteIO = 0;
+	el->tempoRestanteComecoIO = 0;
+	//el->tempoTerminoCPU = tempoAtual+fila->tempo;
+	//el->tempoTerminoIO = 0;
 	el->prox = NULL;
 	if(FILA_vazia(fila))
 		fila->prim = el;
@@ -63,9 +74,10 @@ void FILA_comecaIO(ptFila deFila, ptFila paraFila, ptFila filaIO, int tempoAtual
 	
 	FILA_remove(deFila);
 	FILA_insere(filaIO, id, tempoAtual);
-	filaIO->prim->filaOriginal = paraFila;
-	filaIO->prim->tempoTerminoIO = tempoAtual+TEMPO_IO;
-	printf("FILA: processo %d comeca IO em %d deve acabar em %d\n", id, tempoAtual, filaIO->prim->tempoTerminoIO);
+	filaIO->ult->filaOriginal = paraFila;
+//	filaIO->ult->tempoTerminoIO = tempoAtual+TEMPO_IO;
+	filaIO->ult->tempoRestanteIO = TEMPO_IO;
+	printf("FILA: processo %d comeca IO em %d deve acabar em %d\n", id, tempoAtual, tempoAtual + TEMPO_IO);
 }
 void FILA_atualizaIO(ptFila fila, int tempoAtual){
 	int id;
@@ -73,7 +85,9 @@ void FILA_atualizaIO(ptFila fila, int tempoAtual){
 	Elemento *el, *ant=NULL;
 	el = fila->prim;
 	while (el != NULL){
-		if(tempoAtual >= el->tempoTerminoIO){
+		el->tempoRestanteIO-=1;
+		printf("FILA: processo %d tempo restante IO %d\n", el->id, el->tempoRestanteIO);
+		if(el->tempoRestanteIO<=0){
 			filaOriginal = el->filaOriginal;
 			id = el->id;
 
@@ -103,34 +117,34 @@ void FILA_atualizaIO(ptFila fila, int tempoAtual){
 	}
 			
 }
-int FILA_comecaCPU(ptFila fila, int tempoAtual){
-	if(tempoAtual<fila->prim->tempoTerminoIO) return 1;
-	fila->prim->tempoTerminoCPU = tempoAtual+fila->tempo;
-	printf("FILA: processo %d comeca CPU em %d deve acabar em %d\n", fila->prim->id, tempoAtual, fila->prim->tempoTerminoCPU);
-	return 0;
+int FILA_atualizaCPU(ptFila fila, int tempoAtual){
+	if(FILA_vazia(fila)) return -1;
+	fila->prim->tempoRestante -= 1;
+	printf("FILA: processo %d atualiza CPU em %d\n", fila->prim->id, tempoAtual);
+	return fila->prim->tempoRestante;
 }
-int FILA_tempoRestante(ptFila fila, int tempoAtual){
-	int tempoRestante = fila->prim->tempoTerminoCPU - tempoAtual;
-	return tempoRestante;
+int FILA_tempoRestante(ptFila fila){
+	return fila->prim->tempoRestante;
 }
 int FILA_topId(ptFila fila){
 	if(FILA_vazia(fila)) return -1;
 	return fila->prim->id;
 }
-
-int FILA_getTempoComecoIO(ptFila fila){
+int FILA_getTempoRestanteComecoIO(ptFila fila){
 	if(FILA_vazia(fila)) return -1;
-	return fila->prim->tempoComecoIO;
-}
-int FILA_setTempoComecoIO(ptFila fila, int tempo){
-	if(FILA_vazia(fila)) return -1;
-	fila->prim->tempoComecoIO = tempo;
+	return fila->prim->tempoRestanteComecoIO;
 	return 0;
 }
+
 int FILA_getIndex(ptFila fila){
 	return fila->index;
 }
-/*	DEPRECATED TODO Remove*/
+int FILA_setTempoRestanteComecoIO(ptFila fila){
+	if(FILA_vazia(fila)) return -1;
+	fila->prim->tempoRestanteComecoIO = fila->prim->tempoRestante;
+	return 0;
+}
+/*	DEPRECATED TODO Remover*/
 //void FILA_topResetTempo(ptFila){
 //	if(FILA_vazia(ptFila)) return;
 //	ptFila->prim->tempo = ptFila->tempo;
