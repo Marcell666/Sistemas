@@ -126,10 +126,10 @@ int main(int argc, char **argv){
 	while(TRUE){
 		
 		sleep(1);
-//		if(!solicitouIO && !tempoTermino){
+		if(!solicitouIO && !solicitouTermino){
 			tempo++;
 			printf("\npassou 1 u.t. agora estamos em %d, e na fila %d\n", tempo, indexAtual+1);
-//		}
+		}
 
 		/* Atualiza os processos em I/O	*/
 		if(!FILA_vazia(filaIO))
