@@ -18,13 +18,6 @@ typedef struct elemento{
 	int tempoRestanteIO;
 	/* tempo restante quando este processo pediu IO */
 	int tempoRestanteComecoIO;
-	/* tempo absoluto no qual o processo deve terminar */
-	//int tempoTerminoCPU;
-	
-	/*  tempo absoluto no qual o IO deve terminar */
-	//int tempoTerminoIO;
-	/*  tempo absoluto no qual foi solicitado IO*/
-	//int tempoComecoIO;
 
 } Elemento;
 
@@ -51,8 +44,6 @@ void FILA_insere(ptFila fila, int id, int tempoAtual){
 	el->tempoRestante = fila->tempo;
 	el->tempoRestanteIO = 0;
 	el->tempoRestanteComecoIO = 0;
-	//el->tempoTerminoCPU = tempoAtual+fila->tempo;
-	//el->tempoTerminoIO = 0;
 	el->prox = NULL;
 	if(FILA_vazia(fila))
 		fila->prim = el;
@@ -75,7 +66,6 @@ void FILA_comecaIO(ptFila deFila, ptFila paraFila, ptFila filaIO, int tempoAtual
 	FILA_remove(deFila);
 	FILA_insere(filaIO, id, tempoAtual);
 	filaIO->ult->filaOriginal = paraFila;
-//	filaIO->ult->tempoTerminoIO = tempoAtual+TEMPO_IO;
 	filaIO->ult->tempoRestanteIO = TEMPO_IO;
 	printf("FILA: processo %d comeca IO em %d deve acabar em %d\n", id, tempoAtual, tempoAtual + TEMPO_IO);
 }
@@ -144,19 +134,6 @@ int FILA_setTempoRestanteComecoIO(ptFila fila){
 	fila->prim->tempoRestanteComecoIO = fila->prim->tempoRestante;
 	return 0;
 }
-/*	DEPRECATED TODO Remover*/
-//void FILA_topResetTempo(ptFila){
-//	if(FILA_vazia(ptFila)) return;
-//	ptFila->prim->tempo = ptFila->tempo;
-//	return;
-//}
-//double FILA_topTempo(ptFila ptFila){
-//	if(FILA_vazia(ptFila)) return;
-//	return ptFila->prim->tempo;
-//	return 0.0D;
-//}
-/* DEPRECATED END */
-
 int FILA_vazia(ptFila fila){
 	return fila->prim == NULL;
 }

@@ -40,8 +40,6 @@ int tempo;
 int solicitouIO;
 int solicitouTermino;
 int indexAtual;
-int* flag;
-int segmento;
 
 int main(int argc, char **argv){
 	int tempoRestante;
@@ -49,7 +47,6 @@ int main(int argc, char **argv){
 	char comando[81];
 
 	/*funcao cria*/
-	//int id=0;
 	int i=1;
 	char arg[MAX_STRING];
 	char *args[MAX_ARGS];
@@ -69,17 +66,12 @@ int main(int argc, char **argv){
 	solicitouIO = 0;
 	indexAtual = 0;
 
-	// aloca a memória compartilhada
-	segmento = shmget (CHAVE, sizeof (int), S_IRUSR);	
-	// associa a memória compartilhada ao processo
-	flag = (int*) shmat (segmento, 0, 0);
-
 	signal(SIGUSR1, processoIO);
 	signal(SIGUSR2, processoTermina);
 	
 	/* Loop para criar os processos */
 
-	while (*flag>0) //tem coisa pra ler
+	while (1) //tem coisa pra ler
 	{
 		read(0, comando, 81);
 		//printf("comando lido inicio:%s\n", comando);
@@ -115,7 +107,6 @@ int main(int argc, char **argv){
 		else
 			printf("BUG AQUI\n");
 
-		*flag-=1;			
 	}
 	id = FILA_topId(f1);
 	printf("Iniciando processo %d\n", id);
@@ -126,10 +117,8 @@ int main(int argc, char **argv){
 	while(TRUE){
 		
 		sleep(1);
-		if(!solicitouIO && !solicitouTermino){
-			tempo++;
-			printf("\npassou 1 u.t. agora estamos em %d, e na fila %d\n", tempo, indexAtual+1);
-		}
+		tempo++;
+		printf("\npassou 1 u.t. agora estamos em %d, e na fila %d\n", tempo, indexAtual+1);
 
 		/* Atualiza os processos em I/O	*/
 		if(!FILA_vazia(filaIO))
@@ -150,7 +139,6 @@ int main(int argc, char **argv){
 			}
 		}
 		tempoRestante = FILA_atualizaCPU(fAtual(), tempo);
-		//tempoRestante = FILA_tempoRestante(fAtual(), tempo);
 		printf("tempoRestante:%d do processo %d\n", tempoRestante, id);
 
 		if(solicitouTermino){
@@ -220,6 +208,7 @@ int main(int argc, char **argv){
 
 /* Funcoes de controle de processos */
 
+/*Função chamada quando o processo solicita I/O */
 void processoIO(int sinal){
 	int id = FILA_topId(fAtual());
 	printf("Processo %d solicitou IO em tempo %d\n", id, tempo);
@@ -230,6 +219,7 @@ void processoIO(int sinal){
 	}
 }
 
+/*Função chamada quando o processo termina, e faz uma solicitação de termino */
 void processoTermina(int sinal){
 	int id;
 	id = FILA_topId(fAtual());
@@ -238,7 +228,7 @@ void processoTermina(int sinal){
 }
 
 /* Funcoes de controle de fila */
-
+/* Retorna fila atual, como indicado pela varável indexAtual */
 ptFila fAtual(){
 	//printf("funcFAtual indexAtual: %d\n", indexAtual);
 	if(indexAtual<0 || indexAtual>2) return NULL;
@@ -294,7 +284,5 @@ void encerra(int status){
 	FILA_libera(f2);
 	FILA_libera(f3);
 	FILA_libera(filaIO);
-	shmdt(flag);
-	shmctl(segmento, IPC_RMID, 0);
 	exit(status);
 }
